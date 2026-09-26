@@ -38,10 +38,11 @@ jobs:
     - name: Sign artifact with SignPath
       uses: signpath/github-action-submit-signing-request@v1
       with:
-        connectorId: ${{ secrets.SIGNPATH_CONNECTOR_ID }}
+        apiToken: ${{ secrets.SIGNPATH_API_TOKEN }}
         organizationId: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
         projectSlug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
         signingPolicySlug: ${{ secrets.SIGNPATH_POLICY_SLUG }}
         artifactConfigurationSlug: ${{ secrets.SIGNPATH_ARTIFACT_CONFIG_SLUG }}
+        inputArtifactPath: Output/G134Office-Setup.exe
         outputArtifactName: G134Office-Setup.exe
         waitForCompletion: true
