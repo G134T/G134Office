@@ -13,36 +13,44 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up JDK 17
+    - name: Set up JDK 26
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '26'
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      shell: bash
+    - name: Install Inno Setup
+      shell: powershell
+      run: choco install innosetup --yes --no-progress
 
     - name: Build project with Gradle
-      run: ./gradlew build
+      run: .\gradlew.bat build --no-daemon
+      shell: cmd
 
     - name: Run release build script
-      run: ./build-release.cmd
+      run: .\build-release.cmd
       shell: cmd
 
     - name: Run installer build script (Inno Setup)
-      run: ./build-installer.cmd
+      run: .\build-installer.cmd
       shell: cmd
 
-    # Интеграция с SignPath для автоматической подписи готового инсталлятора
-    - name: Sign artifact with SignPath
-      uses: signpath/github-action-submit-signing-request@v1
+    - name: Upload unsigned installer
+      id: upload-installer
+      uses: actions/upload-artifact@v4
       with:
-        apiToken: ${{ secrets.SIGNPATH_API_TOKEN }}
-        organizationId: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
-        projectSlug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
-        signingPolicySlug: ${{ secrets.SIGNPATH_POLICY_SLUG }}
-        artifactConfigurationSlug: ${{ secrets.SIGNPATH_ARTIFACT_CONFIG_SLUG }}
-        inputArtifactPath: Output/G134Office-Setup.exe
-        outputArtifactName: G134Office-Setup.exe
-        waitForCompletion: true
+        name: G134Office-Setup-unsigned
+        path: build/installer/G134Office-Setup-1.0.0.exe
+
+    # SignPath получает артефакт из GitHub Actions, а не из локального пути.
+    - name: Sign artifact with SignPath
+      uses: signpath/github-action-submit-signing-request@v3
+      with:
+        api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+        organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+        project-slug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
+        signing-policy-slug: ${{ secrets.SIGNPATH_POLICY_SLUG }}
+        artifact-configuration-slug: ${{ secrets.SIGNPATH_ARTIFACT_CONFIG_SLUG }}
+        github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
+        wait-for-completion: true
+        output-artifact-directory: signed
