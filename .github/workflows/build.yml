@@ -44,9 +44,9 @@ jobs:
           if ($cmd) { $iscc = $cmd.Source }
         }
         if (-not $iscc) { throw "ISCC.exe was not found after installing Inno Setup." }
-        $home = Split-Path -Parent $iscc
+        $innoHome = Split-Path -Parent $iscc
         Write-Host "Using $iscc"
-        [System.IO.File]::AppendAllText($env:GITHUB_ENV, "INNO_SETUP_HOME=$home`n")
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV, "INNO_SETUP_HOME=$innoHome`n")
 
     - name: Build project with Gradle
       shell: cmd
