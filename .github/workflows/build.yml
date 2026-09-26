@@ -5,9 +5,18 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+      SIGNPATH_ORGANIZATION_ID: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+      SIGNPATH_PROJECT_SLUG: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
+      SIGNPATH_POLICY_SLUG: ${{ secrets.SIGNPATH_POLICY_SLUG }}
 
     steps:
     - name: Checkout repository
@@ -16,24 +25,40 @@ jobs:
     - name: Set up JDK 26
       uses: actions/setup-java@v4
       with:
-        distribution: 'temurin'
-        java-version: '26'
+        distribution: temurin
+        java-version: "26"
 
-    - name: Install Inno Setup
+    - name: Locate Inno Setup
       shell: powershell
-      run: choco install innosetup --yes --no-progress
+      run: |
+        choco install innosetup --yes --no-progress
+        $candidates = @(
+          "$env:ProgramFiles\Inno Setup 7\ISCC.exe",
+          "${env:ProgramFiles(x86)}\Inno Setup 7\ISCC.exe",
+          "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+          "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+        )
+        $iscc = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+        if (-not $iscc) {
+          $cmd = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+          if ($cmd) { $iscc = $cmd.Source }
+        }
+        if (-not $iscc) { throw "ISCC.exe was not found after installing Inno Setup." }
+        $home = Split-Path -Parent $iscc
+        Write-Host "Using $iscc"
+        [System.IO.File]::AppendAllText($env:GITHUB_ENV, "INNO_SETUP_HOME=$home`n")
 
     - name: Build project with Gradle
-      run: .\gradlew.bat build --no-daemon
       shell: cmd
+      run: .\gradlew.bat build --no-daemon
 
     - name: Run release build script
-      run: .\build-release.cmd
       shell: cmd
+      run: .\build-release.cmd
 
     - name: Run installer build script (Inno Setup)
-      run: .\build-installer.cmd
       shell: cmd
+      run: .\build-installer.cmd
 
     - name: Upload unsigned installer
       id: upload-installer
@@ -41,9 +66,10 @@ jobs:
       with:
         name: G134Office-Setup-unsigned
         path: build/installer/G134Office-Setup-1.0.0.exe
+        if-no-files-found: error
 
-    # SignPath получает артефакт из GitHub Actions, а не из локального пути.
     - name: Sign artifact with SignPath
+      if: env.SIGNPATH_API_TOKEN != '' && env.SIGNPATH_ORGANIZATION_ID != '' && env.SIGNPATH_PROJECT_SLUG != '' && env.SIGNPATH_POLICY_SLUG != ''
       uses: signpath/github-action-submit-signing-request@v3
       with:
         api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -54,3 +80,11 @@ jobs:
         github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
         wait-for-completion: true
         output-artifact-directory: signed
+
+    - name: Upload signed installer
+      if: env.SIGNPATH_API_TOKEN != '' && env.SIGNPATH_ORGANIZATION_ID != '' && env.SIGNPATH_PROJECT_SLUG != '' && env.SIGNPATH_POLICY_SLUG != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: G134Office-Setup-signed
+        path: signed/**
+        if-no-files-found: error
