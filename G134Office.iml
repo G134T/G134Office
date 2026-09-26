@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module version="4">
+  <component name="CheckStyle-IDEA-Module" serialisationVersion="2">
+    <option name="activeLocationsIds" />
+  </component>
+  <component name="OpenBpmProjectModulesStateV2">
+    <option name="hasState" value="true" />
+    <option name="moduleState">
+      <JmixModuleStateV2>
+        <option name="artifactGroup" value="org.example" />
+        <option name="artifactVersion" value="1.0.0" />
+        <option name="buildFilePath" value="C:\Users\Анатолий\OpenideProjects\G134Office\build.gradle.kts" />
+        <option name="buildScriptDependencies">
+          <Dependency configuration="classpath" group="org.jetbrains.kotlin.jvm" name="org.jetbrains.kotlin.jvm.gradle.plugin" version="2.4.20" />
+        </option>
+        <option name="buildSystemName" value="Gradle" />
+        <option name="classesDir" value="C:\Users\Анатолий\OpenideProjects\G134Office\build\classes\java\main" />
+        <option name="dependencies">
+          <Dependency configuration="implementation" group="org.jetbrains.kotlin" name="kotlin-stdlib" />
+          <Dependency configuration="implementation" group="org.openjfx" name="javafx-base" version="26.0.2" />
+          <Dependency configuration="implementation" group="org.openjfx" name="javafx-graphics" version="26.0.2" />
+          <Dependency configuration="implementation" group="org.openjfx" name="javafx-controls" version="26.0.2" />
+          <Dependency configuration="implementation" group="org.openjfx" name="javafx-swing" version="26.0.2" />
+          <Dependency configuration="implementation" group="org.openjfx" name="javafx-media" version="26.0.2" />
+          <Dependency configuration="implementation" group="org.openjfx" name="javafx-web" version="26.0.2" />
+          <Dependency configuration="implementation" group="org.apache.poi" name="poi-ooxml" version="5.5.1" />
+          <Dependency configuration="implementation" group="org.apache.poi" name="poi-scratchpad" version="5.5.1" />
+          <Dependency configuration="implementation" group="org.apache.pdfbox" name="pdfbox" version="3.0.5" />
+          <Dependency configuration="implementation" group="org.xerial" name="sqlite-jdbc" version="3.49.1.0" />
+          <Dependency configuration="implementation" group="net.java.dev.jna" name="jna-platform" version="5.14.0" />
+          <Dependency configuration="implementation" group="org.languagetool" name="languagetool-core" version="6.8" />
+          <Dependency configuration="implementation" group="org.languagetool" name="language-en" version="6.8" />
+          <Dependency configuration="implementation" group="org.languagetool" name="language-ru" version="6.8" />
+          <Dependency configuration="implementation" group="org.languagetool" name="language-uk" version="6.8" />
+          <Dependency configuration="implementation" group="org.languagetool" name="language-be" version="6.8" />
+          <Dependency configuration="testImplementation" group="org.junit.jupiter" name="junit-jupiter" />
+          <Dependency configuration="testImplementation" group="org.jetbrains.kotlin" name="kotlin-test" />
+          <Dependency configuration="testImplementation" group="org.jetbrains.kotlin" name="kotlin-test" version="2.4.20" />
+          <Dependency configuration="testRuntimeOnly" group="org.junit.platform" name="junit-platform-launcher" />
+        </option>
+        <option name="hasKotlinJvmPlugin" value="true" />
+        <option name="jarFile" value="C:\Users\Анатолий\OpenideProjects\G134Office\build\libs\G134Office-1.0.0.jar" />
+        <option name="mavenLocalURI" value="file:/$MAVEN_REPOSITORY$" />
+        <option name="moduleName" value="G134Office" />
+        <option name="rootBuildFilePath" value="C:\Users\Анатолий\OpenideProjects\G134Office\build.gradle.kts" />
+        <option name="rootProjectName" value="G134Office" />
+        <option name="stateBuildScriptRepositories">
+          <Repository url="https://plugins.gradle.org/m2" />
+        </option>
+        <option name="stateRepositories">
+          <Repository url="https://repo.maven.apache.org/maven2/" />
+        </option>
+      </JmixModuleStateV2>
+    </option>
+  </component>
+</module>

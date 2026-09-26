@@ -1,0 +1,8 @@
+.menu-bar .menu > .label {
+    -fx-font-size: 13px;
+}
+.text-area {
+    -fx-font-family: "Segoe UI", "Calibri", sans-serif;
+}
+
+/* G134Office base. Цвета натягивает Theme.applyCss() */
