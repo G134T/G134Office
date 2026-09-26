@@ -1,0 +1,47 @@
+name: Build and Sign Application
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      shell: bash
+
+    - name: Build project with Gradle
+      run: ./gradlew build
+
+    - name: Run release build script
+      run: ./build-release.cmd
+      shell: cmd
+
+    - name: Run installer build script (Inno Setup)
+      run: ./build-installer.cmd
+      shell: cmd
+
+    # Интеграция с SignPath для автоматической подписи готового инсталлятора
+    - name: Sign artifact with SignPath
+      uses: signpath/github-action-submit-signing-request@v1
+      with:
+        connectorId: ${{ secrets.SIGNPATH_CONNECTOR_ID }}
+        organizationId: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+        projectSlug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
+        signingPolicySlug: ${{ secrets.SIGNPATH_POLICY_SLUG }}
+        artifactConfigurationSlug: ${{ secrets.SIGNPATH_ARTIFACT_CONFIG_SLUG }}
+        outputArtifactName: G134Office-Setup.exe
+        waitForCompletion: true
