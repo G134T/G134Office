@@ -16,6 +16,16 @@ if not exist "build\package\G134Office\G134Office.exe" (
   echo Run build-release.cmd first to create the app-image.
   exit /b 1
 )
+echo Building G134Office Lite
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0cpp\build-lite.ps1"
+if errorlevel 1 (
+  echo Lite editor build failed.
+  exit /b 1
+)
+if not exist "cpp\build\Release\G134OfficeLite.exe" (
+  echo G134OfficeLite.exe was not built.
+  exit /b 1
+)
 echo Using %ISS%
 "%ISS%" "G134Office.iss"
 if errorlevel 1 (

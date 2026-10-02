@@ -18,36 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Configure
-        shell: pwsh
-        run: |
-          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          if (-not (Test-Path -LiteralPath $vswhere)) {
-            $cmd = Get-Command vswhere.exe -ErrorAction SilentlyContinue
-            if (-not $cmd) { throw "vswhere.exe не найден" }
-            $vswhere = $cmd.Source
-          }
-          $require = @("-latest", "-products", "*", "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64")
-          $install = & $vswhere @require -property installationPath
-          $version = & $vswhere @require -property installationVersion
-          $line = & $vswhere @require -property catalog_productLineVersion
-          if (-not $install -or -not $version) { throw "Инструменты C++ Visual Studio не найдены" }
-          $major = ($version -split "\.")[0]
-          if (-not $major) { throw "Не удалось определить генератор Visual Studio" }
-          $year = $null
-          if ($line -match "^\d{4}$") { $year = $line }
-          else {
-            foreach ($row in @(cmake --help)) {
-              if ($row -match "Visual Studio $major (\d{4})") { $year = $Matches[1]; break }
-            }
-          }
-          if (-not $year) { throw "CMake не знает генератор Visual Studio $major (линия $line)" }
-          Write-Host "Visual Studio $major $year at $install"
-          cmake -S cpp -B cpp/build -G "Visual Studio $major $year" -A x64
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
       - name: Build
-        run: cmake --build cpp/build --config Release
+        shell: pwsh
+        run: ./cpp/build-lite.ps1
 
       - name: Test
         shell: pwsh

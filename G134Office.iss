@@ -5,6 +5,7 @@
 #define ProjectDir SourcePath
 #define SourceDir ProjectDir + "\build\package\G134Office"
 #define IconFile ProjectDir + "\g134.ico"
+#define LiteExe ProjectDir + "\cpp\build\Release\G134OfficeLite.exe"
 
 [Setup]
 AppId={{A3C8E1B0-7D14-4F2A-9C61-G134OFFICE0001}
@@ -21,7 +22,7 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile={#IconFile}
-UninstallDisplayIcon={app}\{#MyAppExeName}
+UninstallDisplayIcon={app}\g134.ico
 VersionInfoDescription=G134Office — редактор документов и PDF
 VersionInfoProductName=G134Office
 VersionInfoProductVersion={#MyAppVersion}
@@ -77,63 +78,88 @@ english.LicenseAccept=I have read and accept the MIT License for G134Office
 english.LicenseIntro=The complete MIT License text follows. It applies to G134Office original source code. Third-party libraries retain their own licenses; the project origin is described in NOTICE.
 english.ThemeLight=Light
 english.ThemeDark=Dark
+russian.TypeFull=Полная версия
+russian.TypeLite=Облегчённая версия
+russian.ComponentFull=G134Office — документы, PDF и страницы
+russian.ComponentLite=G134Office Lite — обычный текст, один exe без Java
+russian.LaunchFull=Запустить G134Office
+russian.LaunchLite=Запустить G134Office Lite
+english.TypeFull=Full version
+english.TypeLite=Lite version
+english.ComponentFull=G134Office — documents, PDF, and pages
+english.ComponentLite=G134Office Lite — plain text, one exe, no Java
+english.LaunchFull=Launch G134Office
+english.LaunchLite=Launch G134Office Lite
+
+[Types]
+Name: "full"; Description: "{cm:TypeFull}"
+Name: "lite"; Description: "{cm:TypeLite}"
+
+[Components]
+Name: "full"; Description: "{cm:ComponentFull}"; Types: full; Flags: exclusive
+Name: "lite"; Description: "{cm:ComponentLite}"; Types: lite; Flags: exclusive
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:DesktopIconTask}"; GroupDescription: "{cm:ExtraTasksGroup}"
 
 [Files]
-Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Components: full; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#LiteExe}"; DestDir: "{app}"; DestName: "G134OfficeLite.exe"; Components: lite; Flags: ignoreversion
+Source: "{#IconFile}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectDir}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectDir}\NOTICE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectDir}\LICENSE"; DestDir: "{tmp}"; Flags: dontcopy
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"; Components: full
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"; Components: full; Tasks: desktopicon
+Name: "{autoprograms}\G134Office Lite"; Filename: "{app}\G134OfficeLite.exe"; WorkingDir: "{app}"; IconFilename: "{app}\G134OfficeLite.exe"; Components: lite
+Name: "{autodesktop}\G134Office Lite"; Filename: "{app}\G134OfficeLite.exe"; WorkingDir: "{app}"; IconFilename: "{app}\G134OfficeLite.exe"; Components: lite; Tasks: desktopicon
 
 [Registry]
-Root: HKA; Subkey: "Software\Classes\.docx"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.docx'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.docm"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.docm'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.dotx"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.dotx'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.doc"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.doc'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.dot"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.dot'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.odt"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.odt'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.ott"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.ott'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.rtf"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.rtf'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.html"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.html'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.htm"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.htm'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.pdf"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.pdf'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.txt"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.txt'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.md"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.md'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.csv"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.csv'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.xml"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.xml'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.json"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.json'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.fb2"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.fb2'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.epub"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.epub'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.docx\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.docx'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.docm\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.docm'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.dotx\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.dotx'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.doc\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.doc'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.dot\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.dot'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.odt\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.odt'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.ott\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.ott'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.rtf\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.rtf'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.html\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.html'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.htm\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.htm'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.pdf\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.pdf'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.txt\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.txt'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.md\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.md'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.csv\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.csv'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.xml\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.xml'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.json\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.json'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.fb2\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.fb2'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\.epub\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.epub'); Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\G134Office.Document"; ValueType: string; ValueName: ""; ValueData: "G134Office Document"; Flags: uninsdeletekey
-Root: HKA; Subkey: "Software\Classes\G134Office.Document\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
-Root: HKA; Subkey: "Software\Classes\G134Office.Document\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+Root: HKA; Components: full; Subkey: "Software\Classes\.docx"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.docx'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.docm"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.docm'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.dotx"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.dotx'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.doc"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.doc'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.dot"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.dot'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.odt"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.odt'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.ott"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.ott'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.rtf"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.rtf'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.html"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.html'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.htm"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.htm'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.pdf"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.pdf'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.txt"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.txt'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.md"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.md'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.csv"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.csv'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.xml"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.xml'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.json"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.json'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.fb2"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.fb2'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.epub"; ValueType: string; ValueName: ""; ValueData: "G134Office.Document"; Check: IsFormatSelected('.epub'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.docx\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.docx'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.docm\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.docm'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.dotx\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.dotx'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.doc\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.doc'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.dot\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.dot'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.odt\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.odt'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.ott\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.ott'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.rtf\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.rtf'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.html\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.html'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.htm\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.htm'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.pdf\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.pdf'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.txt\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.txt'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.md\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.md'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.csv\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.csv'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.xml\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.xml'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.json\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.json'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.fb2\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.fb2'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\.epub\OpenWithProgids"; ValueType: string; ValueName: "G134Office.Document"; ValueData: ""; Check: IsFormatSelected('.epub'); Flags: uninsdeletevalue
+Root: HKA; Components: full; Subkey: "Software\Classes\G134Office.Document"; ValueType: string; ValueName: ""; ValueData: "G134Office Document"; Flags: uninsdeletekey
+Root: HKA; Components: full; Subkey: "Software\Classes\G134Office.Document\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Components: full; Subkey: "Software\Classes\G134Office.Document\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Запустить G134Office"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchFull}"; WorkingDir: "{app}"; Components: full; Flags: nowait postinstall skipifsilent
+Filename: "{app}\G134OfficeLite.exe"; Description: "{cm:LaunchLite}"; WorkingDir: "{app}"; Components: lite; Flags: nowait postinstall skipifsilent
 
 [Code]
 var
@@ -408,8 +434,30 @@ begin
   ApplyInstallerTheme(IsDarkInstallMode);
 end;
 
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := False;
+  if (FormatPage <> nil) and (PageID = FormatPage.ID) and (not WizardIsComponentSelected('full')) then
+    Result := True;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep <> ssPostInstall then
+    Exit;
+  if WizardIsComponentSelected('lite') then
+    RegWriteStringValue(HKLM,
+      'Software\Microsoft\Windows\CurrentVersion\Uninstall\{A3C8E1B0-7D14-4F2A-9C61-G134OFFICE0001}_is1',
+      'DisplayName', 'G134Office Lite');
+end;
+
 function IsFormatSelected(const Extension: String): Boolean;
 begin
+  if not WizardIsComponentSelected('full') then
+  begin
+    Result := False;
+    Exit;
+  end;
   if (Extension = '.docx') or (Extension = '.docm') or (Extension = '.dotx') then
     Result := WordOpenXmlFormats.Checked
   else if (Extension = '.doc') or (Extension = '.dot') then
