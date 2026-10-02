@@ -1,9 +1,9 @@
 # G134Office Lite
 
-Нативный редактор txt на Win32. Один exe, без JVM, JavaFX и сторонних DLL.
-Это не замена полному редактору: нет docx, pdf, ленты и проверки орфографии.
+Нативный редактор txt на Win32. Один exe, без JVM и JavaFX.
 
-Сборка из «Developer PowerShell for VS»:
+Умеет: создать, открыть, сохранить UTF-8, перетаскивание файла, поиск, перенос строк, крупнее/мельче, строка и столбец.
+Не умеет: docx, pdf, орфография, страницы.
 
 ```powershell
 cd cpp
@@ -11,5 +11,3 @@ cmake -S . -B build
 cmake --build build --config Release
 .\build\Release\G134OfficeLite.exe
 ```
-
-Файл можно передать аргументом. Ctrl+O, Ctrl+S, Ctrl+N.
