@@ -1,0 +1,10 @@
+.font-size-group{display:inline-flex;align-items:center;flex:0 0 auto;border:1px solid var(--line);border-radius:9px;background:var(--button);overflow:hidden;height:36px}
+.font-size-group button{min-width:34px;min-height:34px;height:34px;padding:0 9px;border:0;border-radius:0;background:transparent;font-size:18px;line-height:1}
+.font-size-group button:hover{background:var(--button-hover)}
+.font-size-group input{width:52px;height:34px;min-height:34px;padding:0 4px;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:0;background:transparent;text-align:center;font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield}
+.font-size-group input::-webkit-outer-spin-button,.font-size-group input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.font-size-group .font-unit{padding:0 8px 0 6px;color:var(--muted);font-size:11px;user-select:none}
+body[data-layout="phone"] .font-size-group{height:42px}
+body[data-layout="phone"] .font-size-group button{min-width:40px;min-height:40px;height:40px}
+body[data-layout="phone"] .font-size-group input{width:54px;min-height:40px;height:40px;font-size:15px}
+@media(max-width:420px){.font-size-group .font-unit{display:none}.font-size-group input{width:48px}}
