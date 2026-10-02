@@ -41,9 +41,10 @@ jobs:
             New-Item -ItemType Directory -Path $dest | Out-Null
             & robocopy $javaHome $dest /E /NFL /NDL /NJH /NJS /NC /NS | Out-Null
             if ($LASTEXITCODE -ge 8) { throw "Could not copy the JDK to a path without '+': $dest" }
+            $global:LASTEXITCODE = 0
             $javaHome = $dest
-            [System.IO.File]::AppendAllText($env:GITHUB_ENV, "JAVA_HOME=$javaHome`n")
-            [System.IO.File]::AppendAllText($env:GITHUB_PATH, "$javaHome\bin`n")
+            "JAVA_HOME=$javaHome" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            "$javaHome\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
           }
           $jmod = Join-Path $javaHome "jmods\java.base.jmod"
           if (-not (Test-Path -LiteralPath $jmod)) {
@@ -53,6 +54,7 @@ jobs:
           $props = "`r`norg.gradle.java.installations.auto-detect=false`r`norg.gradle.java.installations.auto-download=false`r`norg.gradle.java.installations.paths=$normalized`r`n"
           [System.IO.File]::AppendAllText((Join-Path (Get-Location) "gradle.properties"), $props)
           Write-Host "jlink will use $jmod"
+          exit 0
 
       - name: Install Inno Setup
         shell: powershell
@@ -69,7 +71,8 @@ jobs:
             if ($cmd) { $iscc = $cmd.Source }
           }
           if (-not $iscc) { throw "ISCC.exe was not found after installing Inno Setup." }
-          [System.IO.File]::AppendAllText($env:GITHUB_ENV, "INNO_SETUP_HOME=$(Split-Path -Parent $iscc)`n")
+          "INNO_SETUP_HOME=$(Split-Path -Parent $iscc)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          exit 0
 
       - name: Run tests
         shell: cmd
@@ -95,9 +98,7 @@ jobs:
       - name: Sign installer with SignPath
         id: signpath
         continue-on-error: true
-        if: >-
-          github.ref_type == 'tag' &&
-          env.SIGNPATH_API_TOKEN != ''
+        if: github.ref_type == 'tag' && env.SIGNPATH_API_TOKEN != ''
         uses: signpath/github-action-submit-signing-request@v3
         with:
           connector-url: https://pipelineconnector.connectors.signpath.io/GitHub/GitHubCom
@@ -114,8 +115,7 @@ jobs:
       - name: Report SignPath failure
         if: always() && steps.signpath.outcome == 'failure'
         shell: powershell
-        run: |
-          Write-Warning "SignPath signing failed. The unsigned installer was built and uploaded successfully. Check the SignPath trusted build system and organization configuration."
+        run: Write-Warning "SignPath signing failed. The unsigned installer was built and uploaded."
 
       - name: Verify signed installer
         if: steps.signpath.outcome == 'success'
@@ -125,20 +125,3 @@ jobs:
           if ($signedInstallers.Count -ne 1) { throw "Expected one signed installer, found $($signedInstallers.Count)." }
           $signature = Get-AuthenticodeSignature -LiteralPath $signedInstallers[0].FullName
           if ($signature.Status -ne 'Valid') { throw "Signed installer has status $($signature.Status)." }
-          Write-Host "Signed by $($signature.SignerCertificate.Subject)"
-
-      - name: Upload signed installer
-        if: steps.signpath.outcome == 'success'
-        uses: actions/upload-artifact@v7
-        with:
-          name: G134Office-Setup-signed
-          path: signed/G134Office-Setup-*.exe
-          archive: false
-          if-no-files-found: error
-
-      - name: Report unsigned release artifact
-        if: >-
-          github.ref_type == 'tag' &&
-          env.SIGNPATH_API_TOKEN == ''
-        shell: powershell
-        run: Write-Host "SIGNPATH_API_TOKEN is missing; only the unsigned installer artifact is available."

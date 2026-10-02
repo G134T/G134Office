@@ -1,21 +1,12 @@
 name: Lite in browser
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - cpp/web/**
-      - .github/workflows/pages.yml
   workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -29,4 +20,11 @@ jobs:
         with:
           path: cpp/web
       - id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
+      - name: Pages not enabled
+        if: steps.deployment.outcome == 'failure'
+        run: |
+          echo "GitHub Pages is not enabled. Open Settings, Pages, Source, GitHub Actions."
+          echo "Until then the editor is at cpp/web/index.html"
+          exit 0
