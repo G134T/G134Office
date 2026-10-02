@@ -1,8 +1,9 @@
-name: Build and Sign Application
+name: Build and sign Windows installer
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
@@ -14,85 +15,104 @@ jobs:
     runs-on: windows-latest
     env:
       SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
-      SIGNPATH_ORGANIZATION_ID: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
-      SIGNPATH_PROJECT_SLUG: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
-      SIGNPATH_POLICY_SLUG: ${{ secrets.SIGNPATH_POLICY_SLUG }}
-
+      SIGNPATH_ORGANIZATION_ID: 55cc375f-6d2c-403b-a8b6-88c80191aeb6
+      SIGNPATH_PROJECT_SLUG: 906e50d7-31fb-4951-8b02-f49461c4718f
+      SIGNPATH_POLICY_SLUG: d4f25173-55f4-4ba4-b733-d64192be40f6
+      SIGNPATH_ARTIFACT_CONFIG_SLUG: d7dda586-5a47-4c2f-9d0b-df9931767a6b
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v5
+      - name: Check out source
+        uses: actions/checkout@v5
 
-    - name: Set up JDK 26
-      uses: actions/setup-java@v5
-      with:
-        distribution: temurin
-        java-version: "26"
+      - name: Set up JDK 26
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "26"
 
-    - name: Locate Inno Setup
-      shell: powershell
-      run: |
-        choco install innosetup --yes --no-progress
-        $candidates = @(
-          "$env:ProgramFiles\Inno Setup 7\ISCC.exe",
-          "${env:ProgramFiles(x86)}\Inno Setup 7\ISCC.exe",
-          "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
-          "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-        )
-        $iscc = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
-        if (-not $iscc) {
-          $cmd = Get-Command ISCC.exe -ErrorAction SilentlyContinue
-          if ($cmd) { $iscc = $cmd.Source }
-        }
-        if (-not $iscc) { throw "ISCC.exe was not found after installing Inno Setup." }
-        $innoHome = Split-Path -Parent $iscc
-        Write-Host "Using $iscc"
-        [System.IO.File]::AppendAllText($env:GITHUB_ENV, "INNO_SETUP_HOME=$innoHome`n")
+      - name: Install Inno Setup
+        shell: powershell
+        run: |
+          choco install innosetup --yes --no-progress
+          $iscc = @(
+            "$env:ProgramFiles\Inno Setup 7\ISCC.exe",
+            "${env:ProgramFiles(x86)}\Inno Setup 7\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if (-not $iscc) {
+            $cmd = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+            if ($cmd) { $iscc = $cmd.Source }
+          }
+          if (-not $iscc) { throw "ISCC.exe was not found after installing Inno Setup." }
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, "INNO_SETUP_HOME=$(Split-Path -Parent $iscc)`n")
 
-    - name: Build project with Gradle
-      shell: cmd
-      run: .\gradlew.bat build --no-daemon
+      - name: Run tests
+        shell: cmd
+        run: .\gradlew.bat test --no-daemon
 
-    - name: Run release build script
-      shell: cmd
-      run: .\build-release.cmd
+      - name: Build application image
+        shell: cmd
+        run: .\build-release.cmd
 
-    - name: Run installer build script (Inno Setup)
-      shell: cmd
-      run: .\build-installer.cmd
+      - name: Build installer
+        shell: cmd
+        run: .\build-installer.cmd
 
-    - name: Upload unsigned installer
-      id: upload-installer
-      uses: actions/upload-artifact@v4
-      with:
-        name: G134Office-Setup-unsigned
-        path: build/installer/G134Office-Setup-1.0.0.exe
-        if-no-files-found: error
+      - name: Upload unsigned installer
+        id: upload-unsigned
+        uses: actions/upload-artifact@v7
+        with:
+          name: G134Office-Setup-unsigned
+          path: build/installer/G134Office-Setup-*.exe
+          archive: false
+          if-no-files-found: error
 
-    - name: Sign artifact with SignPath
-      id: signpath
-      continue-on-error: true
-      if: env.SIGNPATH_API_TOKEN != '' && env.SIGNPATH_ORGANIZATION_ID != '' && env.SIGNPATH_PROJECT_SLUG != '' && env.SIGNPATH_POLICY_SLUG != ''
-      uses: signpath/github-action-submit-signing-request@v3
-      with:
-        api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-        organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
-        project-slug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
-        signing-policy-slug: ${{ secrets.SIGNPATH_POLICY_SLUG }}
-        artifact-configuration-slug: ${{ secrets.SIGNPATH_ARTIFACT_CONFIG_SLUG }}
-        github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
-        wait-for-completion: true
-        output-artifact-directory: signed
+      - name: Sign installer with SignPath
+        id: signpath
+        continue-on-error: true
+        if: >-
+          github.ref_type == 'tag' &&
+          env.SIGNPATH_API_TOKEN != ''
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ env.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ env.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ env.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ env.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ env.SIGNPATH_ARTIFACT_CONFIG_SLUG }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          skip-decompress: true
+          output-artifact-directory: signed
 
-    - name: Report SignPath failure
-      if: always() && steps.signpath.outcome == 'failure'
-      shell: powershell
-      run: |
-        Write-Warning "SignPath signing failed. The unsigned installer was built and uploaded successfully. Check the SignPath trusted build system / organization configuration."
+      - name: Report SignPath failure
+        if: always() && steps.signpath.outcome == 'failure'
+        shell: powershell
+        run: |
+          Write-Warning "SignPath signing failed. The unsigned installer was built and uploaded successfully. Check the SignPath trusted build system and organization configuration."
 
-    - name: Upload signed installer
-      if: steps.signpath.outcome == 'success'
-      uses: actions/upload-artifact@v4
-      with:
-        name: G134Office-Setup-signed
-        path: signed/**
-        if-no-files-found: error
+      - name: Verify signed installer
+        if: steps.signpath.outcome == 'success'
+        shell: powershell
+        run: |
+          $signedInstallers = @(Get-ChildItem -LiteralPath signed -Filter 'G134Office-Setup-*.exe' -File)
+          if ($signedInstallers.Count -ne 1) { throw "Expected one signed installer, found $($signedInstallers.Count)." }
+          $signature = Get-AuthenticodeSignature -LiteralPath $signedInstallers[0].FullName
+          if ($signature.Status -ne 'Valid') { throw "Signed installer has status $($signature.Status)." }
+          Write-Host "Signed by $($signature.SignerCertificate.Subject)"
+
+      - name: Upload signed installer
+        if: steps.signpath.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: G134Office-Setup-signed
+          path: signed/G134Office-Setup-*.exe
+          archive: false
+          if-no-files-found: error
+
+      - name: Report unsigned release artifact
+        if: >-
+          github.ref_type == 'tag' &&
+          env.SIGNPATH_API_TOKEN == ''
+        shell: powershell
+        run: Write-Host "SIGNPATH_API_TOKEN is missing; only the unsigned installer artifact is available."

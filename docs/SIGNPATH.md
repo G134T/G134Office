@@ -11,9 +11,9 @@
 
 - `build.gradle.kts`, `src/main`, `g134.ico`, `G134Office.iss`.
 - C++-заготовка лежит в `cpp/`, релиз её не собирает.
-- CI ставит Temurin 26, Inno Setup, гоняет `gradlew build`, `build-release.cmd`, `build-installer.cmd`.
-- Неподписанный Setup кладётся в artifact `G134Office-Setup-unsigned`.
-- Шаг SignPath не валит сборку, если секретов нет или сервис отказал.
+- CI ставит Temurin 26, Inno Setup, гоняет `gradlew test`, `build-release.cmd`, `build-installer.cmd`.
+- Неподписанный Setup загружается как сам файл exe, без zip.
+- SignPath вызывается только на теге `v*`, если задан `SIGNPATH_API_TOKEN`. Отказ сервиса не валит сборку. После успеха проверяется Authenticode.
 
 ## Что не подписывать
 
@@ -22,13 +22,11 @@
 
 Конфиг в `docs/signpath-artifact.xml` подписывает только `G134Office-Setup-*.exe`.
 
-## Секреты репозитория, после одобрения
+## Секрет репозитория
 
 - `SIGNPATH_API_TOKEN`
-- `SIGNPATH_ORGANIZATION_ID`
-- `SIGNPATH_PROJECT_SLUG`
-- `SIGNPATH_POLICY_SLUG`
-- `SIGNPATH_ARTIFACT_CONFIG_SLUG` — slug конфига из `docs/signpath-artifact.xml`
+
+Идентификаторы организации, проекта, политики и конфигурации артефакта записаны в workflow. Токен в репозиторий не кладётся.
 
 Заявка: https://signpath.io/product/open-source
 Условия: https://signpath.org/terms.html
