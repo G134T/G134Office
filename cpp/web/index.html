@@ -11,6 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="app-icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="app.css?v=20261002-1">
+  <link rel="stylesheet" href="font-size-control.css?v=20261002-1">
   <title>G134Office Lite</title>
 </head>
 <body data-theme="light" data-layout="desktop">
@@ -60,9 +61,12 @@
       <select id="font" title="Шрифт" aria-label="Шрифт">
         <option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option>
       </select>
-      <select id="size" title="Размер" aria-label="Размер шрифта">
-        <option>12</option><option>14</option><option selected>17</option><option>20</option><option>24</option><option>28</option><option>32</option>
-      </select>
+      <div class="font-size-group" role="group" aria-label="Размер шрифта">
+        <button id="fontSizeDown" type="button" title="Уменьшить размер шрифта" aria-label="Уменьшить размер шрифта">−</button>
+        <input id="size" type="number" min="8" max="96" step="1" value="17" inputmode="numeric" title="Размер шрифта от 8 до 96 px" aria-label="Размер шрифта">
+        <button id="fontSizeUp" type="button" title="Увеличить размер шрифта" aria-label="Увеличить размер шрифта">+</button>
+        <span class="font-unit" aria-hidden="true">px</span>
+      </div>
       <span class="tool-divider" aria-hidden="true"></span>
       <button data-cmd="bold" type="button" class="icon-btn" title="Жирный (Ctrl+B)"><b>B</b></button>
       <button data-cmd="italic" type="button" class="icon-btn" title="Курсив (Ctrl+I)"><i>I</i></button>
@@ -133,6 +137,7 @@
 
   <script src="g134lite.js?v=20261002-3"></script>
   <script src="editor.js?v=20261002-1"></script>
+  <script src="font-size-control.js?v=20261002-1"></script>
   <!-- G134_GITHUB_ACCOUNT -->
 </body>
 </html>
