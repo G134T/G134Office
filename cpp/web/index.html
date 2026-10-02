@@ -1,239 +1,139 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f8fa">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>G134Office Lite</title>
 <style>
-  :root {
-    --desk:#c7ced8; --bar:#f7f8fa; --panel:#ffffff; --line:#d5dbe3;
-    --ink:#17191c; --muted:#5c6773; --accent:#2f6fed; --accent-soft:#dce8ff;
-    --sheet:#ffffff; --sheet-ink:#17191c; --field:#ffffff; --hover:#edf3fb;
-    --shadow:0 12px 36px rgba(20,30,40,.22);
-  }
-  html[data-theme="dark"] {
-    --desk:#171a1f; --bar:#20242b; --panel:#252a31; --line:#353c46;
-    --ink:#eef2f6; --muted:#aab3bd; --accent:#78a7ff; --accent-soft:#273c62;
-    --sheet:#24282f; --sheet-ink:#eef2f6; --field:#2a3038; --hover:#303844;
-    --shadow:0 12px 36px rgba(0,0,0,.45);
-  }
-  html[data-theme="sepia"] {
-    --desk:#d8cfbd; --bar:#eee7d7; --panel:#f5efdf; --line:#c9bea8;
-    --ink:#332d24; --muted:#746a59; --accent:#8b5e34; --accent-soft:#e8d5b7;
-    --sheet:#fffaf0; --sheet-ink:#332d24; --field:#fffaf0; --hover:#eadfca;
-    --shadow:0 12px 36px rgba(76,57,34,.20);
-  }
+  :root { --desk:#e7ebf0; --bar:#f7f8fa; --line:#d5dbe3; --ink:#1a1a1a; --safe-b: env(safe-area-inset-bottom); }
   * { box-sizing: border-box; }
-  html, body { margin:0; height:100%; }
-  body {
-    display:flex; flex-direction:column; background:var(--desk); color:var(--ink);
-    font-family:"Segoe UI", system-ui, sans-serif; transition:background .18s ease,color .18s ease;
-  }
-  header { background:var(--bar); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
-  .row { display:flex; gap:6px; align-items:center; padding:6px 10px; flex-wrap:wrap; }
-  .row + .row { border-top:1px solid color-mix(in srgb, var(--line) 70%, transparent); }
-  button, select, input { font:13px "Segoe UI",system-ui,sans-serif; color:var(--ink); }
-  button, select, input[type="text"] {
-    background:var(--field); border:1px solid var(--line); border-radius:6px; min-height:31px;
-  }
-  button { padding:5px 9px; cursor:pointer; }
-  select { padding:4px 8px; cursor:pointer; }
-  button:hover, select:hover { background:var(--hover); }
-  button.on { background:var(--accent-soft); border-color:var(--accent); }
-  .sep { width:1px; height:24px; background:var(--line); margin:0 2px; }
-  #q { width:155px; padding:5px 8px; }
-  #name { margin-left:auto; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:35vw; }
-  #zoomLabel { min-width:48px; text-align:center; color:var(--muted); font-variant-numeric:tabular-nums; }
-  main { flex:1; overflow:auto; padding:24px 12px 44px; }
-  .sheet {
-    width:794px; min-height:1123px; margin:0 auto; background:var(--sheet); color:var(--sheet-ink);
-    box-shadow:var(--shadow); transform-origin:top center; transition:background .18s ease,color .18s ease;
-  }
-  #page {
-    min-height:1123px; padding:72px 76px; outline:none; font:16px/1.45 Calibri,"Segoe UI",sans-serif;
-    white-space:pre-wrap; overflow-wrap:anywhere;
-  }
-  #page.nowrap { white-space:pre; overflow-wrap:normal; overflow-x:auto; }
-  #page:empty:before { content:"Начните писать или перетащите файл"; color:var(--muted); opacity:.65; }
-  #pdf { display:none; width:min(1080px,100%); height:calc(100vh - 160px); margin:0 auto; background:#fff; border:0; box-shadow:var(--shadow); }
-  body.pdf main { padding:12px; }
-  body.pdf .sheet { display:none; }
-  body.pdf #pdf { display:block; }
-  footer {
-    display:flex; gap:16px; align-items:center; padding:6px 12px; background:var(--bar);
-    border-top:1px solid var(--line); color:var(--muted); font-size:13px; min-height:31px;
-  }
-  footer span:last-child { margin-left:auto; }
-  body.focus header .secondary, body.focus footer { display:none; }
-  body.focus main { padding-top:34px; }
-  body.focus header { opacity:.92; }
-  .kbd { font-family:Consolas,monospace; font-size:11px; opacity:.72; }
-  @media (max-width:900px) {
-    main { padding:10px 4px 30px; }
-    .sheet { width:100%; min-height:calc(100vh - 180px); }
-    #page { min-height:calc(100vh - 180px); padding:34px 24px; }
-    #name { order:99; width:100%; max-width:none; margin-left:0; }
-    .sep { display:none; }
+  html, body { margin: 0; height: 100%; }
+  body { display: flex; flex-direction: column; background: var(--desk); color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--bar); border-bottom: 1px solid var(--line); }
+  .row { display: flex; gap: 8px; align-items: center; padding: 8px 10px; }
+  .tools { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+  button, select, input { font: 16px "Segoe UI", system-ui, sans-serif; }
+  button, select { min-height: 40px; background: #fff; border: 1px solid #c5ccd6; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button.on { background: #d9e7f7; border-color: #8eb0d4; }
+  #q { width: 140px; min-height: 40px; padding: 6px 8px; border: 1px solid #c5ccd6; border-radius: 8px; }
+  #name { margin-left: auto; color: #52606d; font-size: 14px; max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  main { flex: 1; overflow: auto; padding: 12px 8px calc(18px + var(--safe-b)); }
+  .sheet { width: min(794px, 100%); min-height: 70vh; margin: 0 auto; background: #fff; box-shadow: 0 6px 22px rgba(20,30,40,.16); border-radius: 2px; }
+  #page { min-height: 70vh; padding: 22px 16px 48px; outline: none; font: 17px/1.5 Calibri, "Segoe UI", sans-serif; }
+  #page:empty:before { content: "Начните писать или перетащите файл"; color: #9aa3ad; }
+  #pdf { display: none; width: 100%; height: calc(100vh - 150px); border: 0; background: #fff; }
+  body.pdf .sheet { display: none; }
+  body.pdf #pdf { display: block; }
+  body.pdf #tools { display: none; }
+  footer { padding: 8px 12px calc(8px + var(--safe-b)); background: var(--bar); border-top: 1px solid var(--line); color: #52606d; font-size: 13px; }
+  #menu { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
+  #menu.open { display: block; }
+  #menu .panel { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 16px 16px 0 0; padding: 12px 12px calc(16px + var(--safe-b)); display: grid; gap: 8px; }
+  #menu h2 { margin: 4px 8px 8px; font-size: 16px; }
+  @media (min-width: 900px) {
+    .sheet { min-height: 1123px; }
+    #page { min-height: 1123px; padding: 72px 76px; }
+    main { padding: 28px 12px 48px; }
   }
   @media print {
-    header, footer, #pdf { display:none !important; }
-    main { padding:0; background:#fff; overflow:visible; }
-    .sheet { box-shadow:none; width:auto; min-height:auto; transform:none !important; background:#fff; color:#000; display:block !important; }
-    #page { min-height:auto; color:#000; }
+    header, footer, #pdf, #menu { display: none !important; }
+    main { padding: 0; background: #fff; }
+    .sheet { box-shadow: none; width: auto; display: block !important; }
   }
 </style>
 </head>
 <body>
 <header>
-  <div class="row primary">
+  <div class="row">
     <button id="modeDoc" class="on" type="button">Документ</button>
     <button id="modePdf" type="button">PDF</button>
-    <span class="sep"></span>
-    <button id="new" type="button" title="Ctrl+N">Создать</button>
-    <button id="open" type="button" title="Ctrl+O">Открыть</button>
-    <button id="save" type="button" title="Ctrl+S">Сохранить HTML</button>
-    <button id="saveTxt" type="button">Сохранить TXT</button>
-    <button id="topdf" type="button">Печать / PDF</button>
+    <button id="open" type="button">Открыть</button>
+    <button id="saveBtn" type="button">Сохранить</button>
     <span id="name">без имени</span>
   </div>
-  <div class="row secondary" id="tools">
-    <select id="font" title="Шрифт">
-      <option>Calibri</option><option>Times New Roman</option><option>Georgia</option>
-      <option>Segoe UI</option><option>Arial</option><option>Consolas</option>
-    </select>
-    <select id="size" title="Размер">
-      <option>12</option><option>14</option><option selected>16</option><option>18</option>
-      <option>22</option><option>28</option><option>36</option>
-    </select>
-    <button data-cmd="bold" type="button" title="Ctrl+B"><b>B</b></button>
-    <button data-cmd="italic" type="button" title="Ctrl+I"><i>I</i></button>
-    <button data-cmd="underline" type="button" title="Ctrl+U"><u>U</u></button>
-    <span class="sep"></span>
+  <div class="row tools" id="tools">
+    <select id="font"><option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option></select>
+    <select id="size"><option>14</option><option selected>17</option><option>20</option><option>24</option><option>28</option></select>
+    <button data-cmd="bold" type="button"><b>B</b></button>
+    <button data-cmd="italic" type="button"><i>I</i></button>
+    <button data-cmd="underline" type="button"><u>U</u></button>
     <button data-cmd="justifyLeft" type="button">Лево</button>
     <button data-cmd="justifyCenter" type="button">Центр</button>
     <button data-cmd="justifyRight" type="button">Право</button>
-    <button data-cmd="insertUnorderedList" type="button">• Список</button>
-    <button id="undo" type="button" title="Ctrl+Z">Отменить</button>
-    <span class="sep"></span>
-    <input id="q" type="text" placeholder="Найти" aria-label="Найти">
-    <button id="find" type="button" title="Ctrl+F">Найти</button>
-  </div>
-  <div class="row secondary" id="viewTools">
-    <span>Тема:</span>
-    <select id="theme" title="Тема интерфейса">
-      <option value="system">Системная</option>
-      <option value="light">Светлая</option>
-      <option value="dark">Тёмная</option>
-      <option value="sepia">Сепия</option>
-    </select>
-    <button id="wrap" class="on" type="button">Перенос строк</button>
-    <span class="sep"></span>
-    <button id="zoomOut" type="button" title="Ctrl+-">−</button>
-    <span id="zoomLabel">100%</span>
-    <button id="zoomIn" type="button" title="Ctrl++">+</button>
-    <button id="zoomReset" type="button" title="Ctrl+0">100%</button>
-    <span class="sep"></span>
-    <button id="focus" type="button">Фокус</button>
-    <button id="fullscreen" type="button">На весь экран</button>
-    <span class="kbd">Ctrl+S · Ctrl+F · Ctrl+0</span>
+    <button data-cmd="insertUnorderedList" type="button">Список</button>
+    <button id="undo" type="button">Отмена</button>
+    <input id="q" placeholder="Найти">
+    <button id="find" type="button">Найти</button>
   </div>
 </header>
 <main>
-  <div class="sheet" id="sheet"><div id="page" contenteditable="true" spellcheck="true"></div></div>
+  <div class="sheet"><div id="page" contenteditable="true"></div></div>
   <iframe id="pdf" title="PDF"></iframe>
 </main>
-<footer>
-  <span id="status">Документ · A4</span>
-  <span id="cursor">Строка 1, столбец 1</span>
-  <span id="draft">Черновик локально</span>
-</footer>
-<input id="file" type="file" accept=".txt,.html,.htm,.pdf,text/plain,text/html,application/pdf" hidden>
+<footer id="status">Документ · файл остаётся в браузере</footer>
+<div id="menu">
+  <div class="panel">
+    <h2>Сохранить как</h2>
+    <button data-save="txt" type="button">Текст .txt</button>
+    <button data-save="html" type="button">Страница .html</button>
+    <button data-save="doc" type="button">Word .doc</button>
+    <button data-save="md" type="button">Markdown .md</button>
+    <button data-save="pdf" type="button">PDF через печать</button>
+    <button data-save="share" type="button">Поделиться</button>
+    <button id="new" type="button">Новый документ</button>
+    <button id="closeMenu" type="button">Закрыть</button>
+  </div>
+</div>
+<input id="file" type="file" accept=".txt,.html,.md,.doc,.pdf,text/plain,text/html,application/pdf" hidden>
 <script>
-const $ = (id) => document.getElementById(id);
-const page = $('page');
-const sheet = $('sheet');
-const pdf = $('pdf');
-const status = $('status');
-const cursor = $('cursor');
-const draft = $('draft');
-const nameEl = $('name');
-const DRAFT_KEY = 'g134office-lite-draft-v2';
-const PREF_KEY = 'g134office-lite-prefs-v2';
-let fileName = 'без имени';
-let dirty = false;
-let pdfUrl = '';
-let zoom = 100;
-let wrap = true;
-let saveTimer = 0;
-
+const page = document.getElementById('page');
+const pdf = document.getElementById('pdf');
+const status = document.getElementById('status');
+const nameEl = document.getElementById('name');
+const menu = document.getElementById('menu');
+let fileName = 'без имени', dirty = false, pdfUrl = '';
 function mark() {
   document.title = 'G134Office Lite — ' + fileName + (dirty ? ' *' : '');
   nameEl.textContent = fileName + (dirty ? ' *' : '');
 }
-
-function stats() {
+function words() {
   const text = page.innerText || '';
-  const trimmed = text.trim();
-  const words = trimmed ? trimmed.split(/\s+/).length : 0;
-  const chars = text.length;
-  const pages = Math.max(1, Math.ceil(chars / 3000));
-  status.textContent = `Документ · слов ${words} · знаков ${chars} · ≈ ${pages} стр.`;
+  return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
-
-function updateCursor() {
-  const sel = window.getSelection();
-  if (!sel || !sel.rangeCount || !page.contains(sel.anchorNode)) {
-    cursor.textContent = 'Строка —, столбец —';
-    return;
-  }
-  const range = sel.getRangeAt(0).cloneRange();
-  const pre = range.cloneRange();
-  pre.selectNodeContents(page);
-  pre.setEnd(range.endContainer, range.endOffset);
-  const text = pre.toString();
-  const parts = text.split('\n');
-  const selected = sel.toString().length;
-  cursor.textContent = `Строка ${parts.length}, столбец ${parts.at(-1).length + 1}` + (selected ? ` · выделено ${selected}` : '');
-}
-
-function saveDraftSoon() {
-  clearTimeout(saveTimer);
-  draft.textContent = 'Сохраняю черновик…';
-  saveTimer = setTimeout(() => {
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({html:page.innerHTML, fileName, savedAt:Date.now()}));
-      draft.textContent = 'Черновик сохранён локально';
-    } catch {
-      draft.textContent = 'Черновик не сохранён';
-    }
-  }, 450);
-}
-
-function clearDraft() {
-  localStorage.removeItem(DRAFT_KEY);
-  draft.textContent = 'Черновик локально';
-}
-
 function showDoc() {
   document.body.classList.remove('pdf');
-  $('modeDoc').classList.add('on');
-  $('modePdf').classList.remove('on');
-  $('tools').style.display = '';
-  $('viewTools').style.display = '';
-  stats();
+  document.getElementById('modeDoc').classList.add('on');
+  document.getElementById('modePdf').classList.remove('on');
+  status.textContent = 'Документ · слов ' + words();
 }
-
 function showPdf() {
   document.body.classList.add('pdf');
-  $('modePdf').classList.add('on');
-  $('modeDoc').classList.remove('on');
-  $('tools').style.display = 'none';
-  $('viewTools').style.display = 'none';
-  status.textContent = pdfUrl ? 'PDF открыт встроенным просмотром браузера' : 'PDF не открыт';
-  cursor.textContent = '';
+  document.getElementById('modePdf').classList.add('on');
+  document.getElementById('modeDoc').classList.remove('on');
+  status.textContent = pdfUrl ? 'PDF открыт просмотром браузера' : 'PDF не открыт';
 }
-
+function baseName() {
+  return fileName.replace(/\.[^.]+$/, '') || 'document';
+}
+function download(name, mime, data) {
+  const blob = data instanceof Blob ? data : new Blob([data], {type: mime});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  dirty = false;
+  fileName = name;
+  mark();
+}
+function wordHtml() {
+  return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"></head><body>' + page.innerHTML + '</body></html>';
+}
+function markdown() {
+  return (page.innerText || '').replace(/\u00a0/g, ' ');
+}
 function openPdf(file) {
   if (pdfUrl) URL.revokeObjectURL(pdfUrl);
   pdfUrl = URL.createObjectURL(file);
@@ -243,157 +143,49 @@ function openPdf(file) {
   mark();
   showPdf();
 }
-
 async function openAny(file) {
   if (!file) return;
-  if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-    openPdf(file); return;
-  }
+  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { openPdf(file); return; }
   const text = await file.text();
-  if (/\.html?$/i.test(file.name)) page.innerHTML = text; else page.innerText = text;
-  fileName = file.name;
-  dirty = false;
-  clearDraft();
-  mark(); showDoc(); updateCursor();
+  if (/\.(html|htm|doc)$/i.test(file.name)) page.innerHTML = text; else page.innerText = text;
+  fileName = file.name; dirty = false; mark(); showDoc();
 }
-
-function download(name, content, type) {
-  const blob = new Blob([content], {type});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 0);
-  dirty = false;
-  mark();
-}
-
-function applyZoom(next) {
-  zoom = Math.min(160, Math.max(60, next));
-  sheet.style.transform = `scale(${zoom / 100})`;
-  sheet.style.marginBottom = `${Math.max(0, 1123 * (zoom / 100 - 1))}px`;
-  $('zoomLabel').textContent = zoom + '%';
-  savePrefs();
-}
-
-function setWrap(value) {
-  wrap = value;
-  page.classList.toggle('nowrap', !wrap);
-  $('wrap').classList.toggle('on', wrap);
-  savePrefs();
-}
-
-function effectiveTheme(value) {
-  if (value !== 'system') return value;
-  return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-function applyTheme(value) {
-  document.documentElement.dataset.theme = effectiveTheme(value);
-  $('theme').value = value;
-  savePrefs();
-}
-
-function savePrefs() {
-  localStorage.setItem(PREF_KEY, JSON.stringify({theme:$('theme').value || 'system', zoom, wrap}));
-}
-
-function loadPrefs() {
-  let prefs = {};
-  try { prefs = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); } catch {}
-  $('theme').value = prefs.theme || 'system';
-  zoom = Number(prefs.zoom) || 100;
-  wrap = prefs.wrap !== false;
-  applyTheme($('theme').value);
-  applyZoom(zoom);
-  setWrap(wrap);
-}
-
-function restoreDraft() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (!saved || !saved.html) return;
-    page.innerHTML = saved.html;
-    fileName = saved.fileName || 'восстановленный черновик';
-    dirty = true;
-    draft.textContent = 'Черновик восстановлен';
-    mark(); stats();
-  } catch {}
-}
-
-page.addEventListener('input', () => {
-  dirty = true; mark(); stats(); updateCursor(); saveDraftSoon();
+page.addEventListener('input', () => { dirty = true; mark(); showDoc(); });
+document.querySelectorAll('[data-cmd]').forEach(btn => btn.onclick = () => { page.focus(); document.execCommand(btn.dataset.cmd); dirty = true; mark(); });
+document.getElementById('font').onchange = (e) => { page.focus(); document.execCommand('fontName', false, e.target.value); };
+document.getElementById('size').onchange = (e) => { page.focus(); document.execCommand('fontSize', false, '4'); page.querySelectorAll('font[size="4"]').forEach(n => { n.removeAttribute('size'); n.style.fontSize = e.target.value + 'px'; }); };
+document.getElementById('undo').onclick = () => document.execCommand('undo');
+document.getElementById('modeDoc').onclick = showDoc;
+document.getElementById('modePdf').onclick = showPdf;
+document.getElementById('open').onclick = () => document.getElementById('file').click();
+document.getElementById('file').onchange = (e) => openAny(e.target.files[0]);
+document.getElementById('saveBtn').onclick = () => menu.classList.add('open');
+document.getElementById('closeMenu').onclick = () => menu.classList.remove('open');
+menu.onclick = (e) => { if (e.target === menu) menu.classList.remove('open'); };
+document.querySelectorAll('[data-save]').forEach(btn => btn.onclick = async () => {
+  const kind = btn.dataset.save;
+  menu.classList.remove('open');
+  if (kind === 'txt') download(baseName() + '.txt', 'text/plain;charset=utf-8', page.innerText || '');
+  if (kind === 'html') download(baseName() + '.html', 'text/html;charset=utf-8', page.innerHTML);
+  if (kind === 'doc') download(baseName() + '.doc', 'application/msword', wordHtml());
+  if (kind === 'md') download(baseName() + '.md', 'text/markdown;charset=utf-8', markdown());
+  if (kind === 'pdf') { showDoc(); setTimeout(() => window.print(), 50); }
+  if (kind === 'share') {
+    const file = new File([page.innerText || ''], baseName() + '.txt', {type: 'text/plain'});
+    if (navigator.share) await navigator.share({title: fileName, files: [file]}).catch(() => navigator.share({title: fileName, text: page.innerText || ''}));
+    else status.textContent = 'На этом устройстве нет кнопки Поделиться';
+  }
 });
-['keyup','mouseup','focus'].forEach(evt => page.addEventListener(evt, updateCursor));
-
-document.querySelectorAll('[data-cmd]').forEach(btn => btn.onclick = () => {
-  page.focus();
-  document.execCommand(btn.dataset.cmd);
-  dirty = true; mark(); stats(); saveDraftSoon();
-});
-
-$('font').onchange = (e) => {
-  page.focus(); document.execCommand('fontName', false, e.target.value); dirty = true; saveDraftSoon();
-};
-$('size').onchange = (e) => {
-  page.focus();
-  document.execCommand('fontSize', false, '4');
-  page.querySelectorAll('font[size="4"]').forEach(n => { n.removeAttribute('size'); n.style.fontSize = e.target.value + 'px'; });
-  dirty = true; saveDraftSoon();
-};
-$('undo').onclick = () => { document.execCommand('undo'); stats(); saveDraftSoon(); };
-$('modeDoc').onclick = showDoc;
-$('modePdf').onclick = showPdf;
-$('new').onclick = () => {
+document.getElementById('new').onclick = () => {
+  menu.classList.remove('open');
   if (dirty && !confirm('Сбросить изменения?')) return;
-  page.innerHTML = ''; fileName = 'без имени'; dirty = false; clearDraft(); mark(); showDoc(); updateCursor();
+  page.innerHTML = ''; fileName = 'без имени'; dirty = false; mark(); showDoc();
 };
-$('open').onclick = () => $('file').click();
-$('file').onchange = (e) => { openAny(e.target.files[0]); e.target.value = ''; };
-$('save').onclick = () => {
-  const name = /\.html?$/i.test(fileName) ? fileName : 'document.html';
-  download(name, page.innerHTML, 'text/html;charset=utf-8');
-  clearDraft();
-};
-$('saveTxt').onclick = () => {
-  const base = fileName.replace(/\.[^.]+$/, '') || 'document';
-  download(base + '.txt', page.innerText, 'text/plain;charset=utf-8');
-  clearDraft();
-};
-$('topdf').onclick = () => { showDoc(); setTimeout(() => window.print(), 60); };
-$('find').onclick = () => { const q = $('q').value.trim(); if (q) window.find(q, false, false, true, false, true, false); };
-$('q').addEventListener('keydown', e => { if (e.key === 'Enter') $('find').click(); });
-$('theme').onchange = e => applyTheme(e.target.value);
-$('wrap').onclick = () => setWrap(!wrap);
-$('zoomIn').onclick = () => applyZoom(zoom + 10);
-$('zoomOut').onclick = () => applyZoom(zoom - 10);
-$('zoomReset').onclick = () => applyZoom(100);
-$('focus').onclick = () => { document.body.classList.toggle('focus'); $('focus').classList.toggle('on', document.body.classList.contains('focus')); };
-$('fullscreen').onclick = async () => {
-  if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
-  else await document.exitFullscreen?.();
-};
-
-window.addEventListener('dragover', e => e.preventDefault());
-window.addEventListener('drop', e => { e.preventDefault(); openAny(e.dataTransfer.files[0]); });
-window.addEventListener('beforeunload', e => { if (dirty) e.preventDefault(); });
-matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if ($('theme').value === 'system') applyTheme('system'); });
-
-document.addEventListener('keydown', e => {
-  if (!e.ctrlKey) return;
-  const k = e.key.toLowerCase();
-  if (k === 's') { e.preventDefault(); $('save').click(); }
-  else if (k === 'o') { e.preventDefault(); $('open').click(); }
-  else if (k === 'n') { e.preventDefault(); $('new').click(); }
-  else if (k === 'f') { e.preventDefault(); $('q').focus(); $('q').select(); }
-  else if (k === '0') { e.preventDefault(); applyZoom(100); }
-  else if (k === '+' || k === '=') { e.preventDefault(); applyZoom(zoom + 10); }
-  else if (k === '-') { e.preventDefault(); applyZoom(zoom - 10); }
-});
-
-loadPrefs();
-restoreDraft();
-mark(); showDoc(); updateCursor();
+document.getElementById('find').onclick = () => { const q = document.getElementById('q').value; if (q) window.find(q); };
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('drop', (e) => { e.preventDefault(); openAny(e.dataTransfer.files[0]); });
+window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
+mark(); showDoc();
 </script>
 </body>
 </html>
