@@ -3,228 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f7f8fa">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#f7f8fa" id="themeMeta">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>G134Office Lite</title>
 <style>
-  :root { --desk:#e6ebf1; --bar:#f7f8fa; --paper:#fff; --ink:#1c1c1c; --muted:#5c6773; --line:#d5dbe3; --accent:#1f6feb; --safe:env(safe-area-inset-bottom); }
-  body.dark { --desk:#121418; --bar:#1b1e24; --paper:#20242b; --ink:#f2f4f7; --muted:#a8b0ba; --line:#343a44; --accent:#6ea8fe; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body { display: flex; flex-direction: column; background: var(--desk); color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; }
-  header { position: sticky; top: 0; z-index: 3; background: var(--bar); border-bottom: 1px solid var(--line); }
-  .row { display: flex; gap: 8px; align-items: center; padding: 8px 10px; }
-  .tools { overflow-x: auto; }
-  button, select, input { font: 16px "Segoe UI", system-ui, sans-serif; color: var(--ink); }
-  button, select { min-height: 40px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; }
-  button.on { background: #d9e7f7; border-color: #8eb0d4; }
-  body.dark button.on { background: #24344d; }
-  #title { flex: 1; min-width: 120px; border: 0; background: transparent; font-weight: 600; }
-  #user { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 14px; }
-  main { flex: 1; overflow: auto; padding: 12px 8px calc(16px + var(--safe)); }
-  .sheet { width: min(794px, 100%); min-height: 72vh; margin: 0 auto; background: var(--paper); box-shadow: 0 8px 24px rgba(0,0,0,.14); }
-  #page { min-height: 72vh; padding: 22px 16px 64px; outline: none; font: 17px/1.5 Calibri, "Segoe UI", sans-serif; }
-  #page:empty:before { content: "Начните писать"; color: var(--muted); }
-  #pdf { display: none; width: 100%; height: calc(100vh - 150px); border: 0; background: var(--paper); }
-  body.pdf .sheet, body.pdf #tools { display: none; }
-  body.pdf #pdf { display: block; }
-  footer { padding: 8px 12px calc(8px + var(--safe)); background: var(--bar); border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
-  .mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; z-index: 6; }
-  .mask.open { display: block; }
-  .panel { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86vh; overflow: auto; background: var(--bar); color: var(--ink); border-radius: 16px 16px 0 0; padding: 14px 12px calc(16px + var(--safe)); display: grid; gap: 8px; }
-  .panel h2 { margin: 2px 6px 6px; font-size: 16px; }
-  .panel p, .panel label { margin: 0 6px; color: var(--muted); font-size: 13px; }
-  .panel input[type=password], .panel input[type=text] { width: 100%; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); padding: 8px; }
-  #gists { display: grid; gap: 6px; }
-  @media (min-width: 900px) { .sheet, #page { min-height: 1123px; } #page { padding: 72px 76px; } main { padding: 28px 12px 48px; } }
-  @media print { header, footer, .mask, #pdf { display: none !important; } .sheet { display: block !important; box-shadow: none; width: auto; background: #fff; color: #000; } }
+:root{--desk:#e7ebf0;--bar:#f7f8fa;--line:#d5dbe3;--ink:#1a1a1a;--muted:#52606d;--paper:#fff;--button:#fff;--button-hover:#eef3f8;--accent:#d9e7f7;--accent-line:#8eb0d4;--shadow:rgba(20,30,40,.16);--safe-t:env(safe-area-inset-top);--safe-b:env(safe-area-inset-bottom)}
+body[data-theme="dark"]{--desk:#17191d;--bar:#22252b;--line:#343943;--ink:#e9edf2;--muted:#aeb7c2;--paper:#262a31;--button:#2e333b;--button-hover:#3a414c;--accent:#294766;--accent-line:#5484b5;--shadow:rgba(0,0,0,.42)}
+body[data-theme="sepia"]{--desk:#e7dfcf;--bar:#f4ecdc;--line:#d3c4a7;--ink:#403729;--muted:#746550;--paper:#fff8e8;--button:#fffaf0;--button-hover:#efe3ca;--accent:#ead7ad;--accent-line:#b99b62;--shadow:rgba(70,50,20,.18)}
+*{box-sizing:border-box}html,body{margin:0;height:100%}body{display:flex;flex-direction:column;background:var(--desk);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif}header{position:sticky;top:0;z-index:2;background:var(--bar);border-bottom:1px solid var(--line);padding-top:var(--safe-t)}.row{display:flex;gap:8px;align-items:center;padding:8px 10px}.tools{overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}button,select,input{font:14px "Segoe UI",system-ui,sans-serif;color:var(--ink)}button,select{min-height:36px;background:var(--button);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}button:hover{background:var(--button-hover)}button.on{background:var(--accent);border-color:var(--accent-line)}#q{width:140px;min-height:36px;padding:5px 8px;color:var(--ink);background:var(--button);border:1px solid var(--line);border-radius:8px}#name{margin-left:auto;color:var(--muted);font-size:13px;max-width:32vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#engine,#deviceState{font-size:12px;color:var(--muted);white-space:nowrap}#layoutRow{border-top:1px solid var(--line);padding-top:6px;padding-bottom:6px}.layout-label{color:var(--muted);font-size:12px;font-weight:600}.layout-buttons{display:flex;gap:5px}.layout-buttons button{min-height:32px;padding:4px 9px;font-size:12px}.auto-check{display:inline-flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid var(--line);border-radius:8px;background:var(--button);font-size:12px;cursor:pointer;white-space:nowrap}.auto-check input{accent-color:#3b82f6}main{flex:1;overflow:auto;padding:18px 8px calc(24px + var(--safe-b))}.sheet{width:min(794px,100%);min-height:70vh;margin:0 auto;background:var(--paper);box-shadow:0 8px 28px var(--shadow);border-radius:3px;transform-origin:top center}#page{min-height:70vh;padding:28px 24px 56px;outline:none;font:17px/1.55 Calibri,"Segoe UI",sans-serif;color:var(--ink);overflow-wrap:anywhere}#page.no-wrap{white-space:pre;overflow-wrap:normal;overflow-x:auto}#page:empty:before{content:"Начните писать или перетащите файл";color:var(--muted);opacity:.65}#pdf{display:none;width:100%;height:calc(100vh - 170px);border:0;background:#fff}body.pdf .sheet{display:none}body.pdf #pdf{display:block}body.pdf #tools{display:none}body.focus header .row:first-child,body.focus #layoutRow,body.focus footer{display:none}body.focus header{border:0}footer{padding:8px 12px calc(8px + var(--safe-b));background:var(--bar);border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:14px;flex-wrap:wrap}#menu{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;z-index:5}#menu.open{display:block}#menu .panel{position:absolute;left:0;right:0;bottom:0;background:var(--bar);border-radius:16px 16px 0 0;padding:12px 12px calc(16px + var(--safe-b));display:grid;gap:8px;max-height:90vh;overflow:auto}#menu h2{margin:4px 8px 0;font-size:18px}.format-note{margin:0 8px 8px;color:var(--muted);font-size:12px;line-height:1.4}.format-btn{display:flex;align-items:center;justify-content:space-between;text-align:left}.format-btn small{color:var(--muted);margin-left:10px}body[data-layout="phone"] header .row:first-child{gap:5px;padding:6px}body[data-layout="phone"] header .row:first-child button{min-height:38px;padding:5px 8px;font-size:12px}body[data-layout="phone"] #focusBtn,body[data-layout="phone"] #fullBtn,body[data-layout="phone"] #engine{display:none}body[data-layout="phone"] #name{max-width:28vw;font-size:11px}body[data-layout="phone"] #layoutRow{overflow-x:auto;flex-wrap:nowrap;gap:5px;padding:5px 6px}body[data-layout="phone"] .layout-label{display:none}body[data-layout="phone"] .layout-buttons button{min-width:64px}body[data-layout="phone"] #tools{padding:6px;gap:5px}body[data-layout="phone"] #tools button,body[data-layout="phone"] #tools select{min-height:40px}body[data-layout="phone"] #q{min-height:40px;width:110px}body[data-layout="phone"] main{padding:0 0 calc(12px + var(--safe-b))}body[data-layout="phone"] .sheet{width:100%;min-height:calc(100vh - 190px);border-radius:0;box-shadow:none}body[data-layout="phone"] #page{min-height:calc(100vh - 190px);padding:20px 14px 60px;font-size:17px;line-height:1.58}body[data-layout="phone"] footer{gap:8px;padding:6px 8px calc(7px + var(--safe-b));font-size:11px}body[data-layout="phone"] #cursor{display:none}body[data-layout="tablet"] .row{flex-wrap:wrap}body[data-layout="tablet"] #name{max-width:28vw}body[data-layout="tablet"] main{padding:18px 16px calc(24px + var(--safe-b))}body[data-layout="tablet"] .sheet{width:min(760px,100%)}body[data-layout="tablet"] #page{padding:48px 48px 70px;font-size:17px}body[data-layout="desktop"] .sheet{min-height:1123px;width:794px}body[data-layout="desktop"] #page{min-height:1123px;padding:72px 76px}body[data-layout="desktop"] main{padding:28px 12px 48px}body[data-layout="desktop"] #menu .panel{left:auto;width:390px;top:64px;bottom:auto;right:12px;border-radius:12px}@media print{header,footer,#pdf,#menu{display:none!important}main{padding:0;background:#fff;overflow:visible}.sheet{box-shadow:none;width:auto!important;transform:none!important;display:block!important;background:#fff}#page{color:#000;min-height:auto!important;padding:20mm!important}}
 </style>
 </head>
-<body>
-<header>
-  <div class="row">
-    <button id="modeDoc" class="on" type="button">Документ</button>
-    <button id="modePdf" type="button">PDF</button>
-    <input id="title" value="Без имени" aria-label="Название">
-    <button id="ghBtn" type="button">GitHub</button>
-    <span id="user"></span>
-  </div>
-  <div class="row tools" id="tools">
-    <select id="font"><option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option></select>
-    <select id="size"><option>14</option><option selected>17</option><option>20</option><option>24</option><option>28</option></select>
-    <button data-cmd="bold" type="button"><b>B</b></button>
-    <button data-cmd="italic" type="button"><i>I</i></button>
-    <button data-cmd="underline" type="button"><u>U</u></button>
-    <button data-cmd="justifyLeft" type="button">Лево</button>
-    <button data-cmd="justifyCenter" type="button">Центр</button>
-    <button data-cmd="justifyRight" type="button">Право</button>
-    <button data-cmd="insertUnorderedList" type="button">Список</button>
-    <button id="undo" type="button">Отмена</button>
-    <button id="theme" type="button">Тема</button>
-    <button id="open" type="button">Открыть</button>
-    <button id="saveBtn" type="button">Сохранить</button>
-  </div>
-</header>
-<main>
-  <div class="sheet"><div id="page" contenteditable="true"></div></div>
-  <iframe id="pdf" title="PDF"></iframe>
-</main>
-<footer id="status">Черновик хранится в браузере</footer>
-<div id="saveMenu" class="mask"><div class="panel">
-  <h2>Сохранить как</h2>
-  <button data-save="txt" type="button">Текст .txt</button>
-  <button data-save="html" type="button">Страница .html</button>
-  <button data-save="doc" type="button">Word .doc</button>
-  <button data-save="md" type="button">Markdown .md</button>
-  <button data-save="pdf" type="button">PDF через печать</button>
-  <button data-save="gist" type="button">В Gist на GitHub</button>
-  <button data-save="share" type="button">Поделиться</button>
-  <button id="newDoc" type="button">Новый документ</button>
-  <button data-close="saveMenu" type="button">Закрыть</button>
-</div></div>
-<div id="ghMenu" class="mask"><div class="panel">
-  <h2>Вход через GitHub</h2>
-  <p>Страница статическая, поэтому секрет OAuth сюда класть нельзя. Токен остаётся только в этом браузере.</p>
-  <p><a id="tokenLink" href="https://github.com/settings/tokens/new?scopes=gist&description=G134Office%20Lite" target="_blank" rel="noopener">Создать токен с правом gist</a></p>
-  <input id="token" type="password" placeholder="github_pat_... или ghp_..." autocomplete="off">
-  <button id="login" type="button">Войти</button>
-  <button id="logout" type="button">Выйти</button>
-  <div id="gists"></div>
-  <button data-close="ghMenu" type="button">Закрыть</button>
-</div></div>
-<input id="file" type="file" accept=".txt,.html,.md,.doc,.pdf,text/plain,text/html,application/pdf" hidden>
+<body data-theme="light" data-layout="desktop">
+<header><div class="row"><button id="modeDoc" class="on" type="button">Документ</button><button id="modePdf" type="button">PDF</button><button id="open" type="button">Открыть</button><button id="saveBtn" type="button">Сохранить</button><button id="focusBtn" type="button">Фокус</button><button id="fullBtn" type="button">Полный экран</button><span id="engine">C++: загрузка…</span><span id="name">без имени</span></div><div class="row" id="layoutRow"><span class="layout-label">Вид:</span><label class="auto-check"><input id="autoLayout" type="checkbox" checked> Авто</label><div class="layout-buttons" role="group" aria-label="Режим отображения"><button type="button" data-layout-mode="phone">📱 Телефон</button><button type="button" data-layout-mode="tablet">▣ Планшет</button><button type="button" data-layout-mode="desktop">🖥 ПК</button></div><span id="deviceState">Определение устройства…</span></div><div class="row tools" id="tools"><select id="theme" title="Тема"><option value="system">Системная тема</option><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="sepia">Сепия</option></select><select id="font"><option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option></select><select id="size"><option>14</option><option selected>17</option><option>20</option><option>24</option><option>28</option></select><button data-cmd="bold" type="button"><b>B</b></button><button data-cmd="italic" type="button"><i>I</i></button><button data-cmd="underline" type="button"><u>U</u></button><button data-cmd="justifyLeft" type="button">Лево</button><button data-cmd="justifyCenter" type="button">Центр</button><button data-cmd="justifyRight" type="button">Право</button><button data-cmd="insertUnorderedList" type="button">Список</button><button id="undo" type="button">Отмена</button><button id="wrapBtn" class="on" type="button">Перенос</button><button id="zoomOut" type="button">−</button><button id="zoomReset" type="button">100%</button><button id="zoomIn" type="button">+</button><input id="q" placeholder="Найти"><button id="find" type="button">Найти</button></div></header>
+<main><div class="sheet"><div id="page" contenteditable="true" spellcheck="true"></div></div><iframe id="pdf" title="PDF"></iframe></main>
+<footer><span id="status">Документ</span><span id="cursor">Стр 1 · Стлб 1</span><span id="autosave">Автосохранение включено</span><span id="layoutFooter">Вид: авто</span></footer>
+<div id="menu"><div class="panel"><h2>Сохранить документ</h2><p class="format-note">DOCX и ODT создаются как настоящие контейнеры документов. Файл остаётся на вашем устройстве и никуда не отправляется.</p><button class="format-btn" data-save="docx" type="button"><span>Word .docx</span><small>Google Docs / Word</small></button><button class="format-btn" data-save="odt" type="button"><span>OpenDocument .odt</span><small>LibreOffice / Google Docs</small></button><button class="format-btn" data-save="rtf" type="button"><span>Rich Text .rtf</span><small>совместимый текст</small></button><button class="format-btn" data-save="txt" type="button"><span>Текст .txt</span><small>UTF-8</small></button><button class="format-btn" data-save="pdf" type="button"><span>PDF</span><small>системное «Сохранить как PDF»</small></button><button data-save="share" type="button">Поделиться текстом</button><button id="new" type="button">Новый документ</button><button id="closeMenu" type="button">Закрыть</button></div></div>
+<input id="file" type="file" accept=".txt,.html,.htm,.pdf,text/plain,text/html,application/pdf" hidden>
+<script src="g134lite.js?v=20261002-2"></script>
 <script>
-const page = document.getElementById('page');
-const pdf = document.getElementById('pdf');
-const status = document.getElementById('status');
-const title = document.getElementById('title');
-const userEl = document.getElementById('user');
-let pdfUrl = '', gistId = localStorage.getItem('g134-gist') || '';
-function token() { return localStorage.getItem('g134-token') || ''; }
-function setStatus(text) { status.textContent = text; }
-function words() { const t = page.innerText || ''; return t.trim() ? t.trim().split(/\s+/).length : 0; }
-function showDoc() {
-  document.body.classList.remove('pdf');
-  document.getElementById('modeDoc').classList.add('on');
-  document.getElementById('modePdf').classList.remove('on');
-  setStatus('Слов ' + words() + ' · черновик в браузере');
-}
-function showPdf() {
-  document.body.classList.add('pdf');
-  document.getElementById('modePdf').classList.add('on');
-  document.getElementById('modeDoc').classList.remove('on');
-  setStatus(pdfUrl ? 'PDF открыт просмотром браузера' : 'PDF не открыт');
-}
-function saveLocal() {
-  localStorage.setItem('g134-doc', JSON.stringify({title: title.value, html: page.innerHTML}));
-}
-function loadLocal() {
-  try {
-    const data = JSON.parse(localStorage.getItem('g134-doc') || '{}');
-    if (data.html) page.innerHTML = data.html;
-    if (data.title) title.value = data.title;
-  } catch (e) {}
-  document.body.classList.toggle('dark', localStorage.getItem('g134-theme') === 'dark');
-}
-function baseName() { return (title.value || 'document').replace(/[\\/:*?"<>|]/g, '').trim() || 'document'; }
-function download(name, mime, data) {
-  const blob = data instanceof Blob ? data : new Blob([data], {type: mime});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href);
-}
-function wordHtml() {
-  return '<html><head><meta charset="utf-8"></head><body>' + page.innerHTML + '</body></html>';
-}
-async function gh(path, options) {
-  const res = await fetch('https://api.github.com' + path, Object.assign({
-    headers: {Authorization: 'Bearer ' + token(), Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'}
-  }, options || {}));
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
-async function refreshUser() {
-  if (!token()) { userEl.textContent = ''; return; }
-  try {
-    const me = await gh('/user');
-    userEl.textContent = me.login;
-    document.getElementById('ghBtn').textContent = me.login;
-  } catch (e) { userEl.textContent = 'токен не принят'; }
-}
-async function listGists() {
-  const box = document.getElementById('gists');
-  box.innerHTML = '';
-  if (!token()) return;
-  const gists = await gh('/gists?per_page=8');
-  gists.filter(g => (g.description || '').startsWith('G134Office')).forEach(g => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = g.description;
-    b.onclick = () => openGist(g.id);
-    box.appendChild(b);
-  });
-}
-async function openGist(id) {
-  const g = await gh('/gists/' + id);
-  const file = Object.values(g.files)[0];
-  page.innerHTML = file.content || '';
-  title.value = (g.description || 'Gist').replace(/^G134Office: /, '');
-  gistId = id; localStorage.setItem('g134-gist', id); saveLocal(); showDoc();
-  document.getElementById('ghMenu').classList.remove('open');
-}
-async function saveGist() {
-  if (!token()) { document.getElementById('ghMenu').classList.add('open'); return; }
-  const body = {description: 'G134Office: ' + title.value, public: false, files: {}};
-  body.files[baseName() + '.html'] = {content: page.innerHTML || ' '};
-  const g = gistId ? await gh('/gists/' + gistId, {method: 'PATCH', body: JSON.stringify(body)}) : await gh('/gists', {method: 'POST', body: JSON.stringify(body)});
-  gistId = g.id; localStorage.setItem('g134-gist', gistId);
-  setStatus('Сохранено в Gist');
-}
-page.addEventListener('input', () => { saveLocal(); showDoc(); });
-title.addEventListener('input', saveLocal);
-document.querySelectorAll('[data-cmd]').forEach(b => b.onclick = () => { page.focus(); document.execCommand(b.dataset.cmd); saveLocal(); });
-document.getElementById('font').onchange = (e) => { page.focus(); document.execCommand('fontName', false, e.target.value); };
-document.getElementById('size').onchange = (e) => { page.focus(); document.execCommand('fontSize', false, '4'); page.querySelectorAll('font[size="4"]').forEach(n => { n.removeAttribute('size'); n.style.fontSize = e.target.value + 'px'; }); };
-document.getElementById('undo').onclick = () => document.execCommand('undo');
-document.getElementById('theme').onclick = () => { document.body.classList.toggle('dark'); localStorage.setItem('g134-theme', document.body.classList.contains('dark') ? 'dark' : 'light'); };
-document.getElementById('modeDoc').onclick = showDoc;
-document.getElementById('modePdf').onclick = showPdf;
-document.getElementById('open').onclick = () => document.getElementById('file').click();
-document.getElementById('file').onchange = async (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  if (/\.pdf$/i.test(file.name)) { if (pdfUrl) URL.revokeObjectURL(pdfUrl); pdfUrl = URL.createObjectURL(file); pdf.src = pdfUrl; showPdf(); return; }
-  const text = await file.text();
-  if (/\.(html|htm|doc)$/i.test(file.name)) page.innerHTML = text; else page.innerText = text;
-  title.value = file.name.replace(/\.[^.]+$/, ''); saveLocal(); showDoc();
-};
-document.getElementById('saveBtn').onclick = () => document.getElementById('saveMenu').classList.add('open');
-document.getElementById('ghBtn').onclick = () => { document.getElementById('ghMenu').classList.add('open'); listGists().catch(e => setStatus(e.message)); };
-document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => document.getElementById(b.dataset.close).classList.remove('open'));
-document.querySelectorAll('.mask').forEach(m => m.onclick = (e) => { if (e.target === m) m.classList.remove('open'); });
-document.querySelectorAll('[data-save]').forEach(b => b.onclick = async () => {
-  document.getElementById('saveMenu').classList.remove('open');
-  const k = b.dataset.save;
-  if (k === 'txt') download(baseName() + '.txt', 'text/plain;charset=utf-8', page.innerText || '');
-  if (k === 'html') download(baseName() + '.html', 'text/html;charset=utf-8', page.innerHTML);
-  if (k === 'doc') download(baseName() + '.doc', 'application/msword', wordHtml());
-  if (k === 'md') download(baseName() + '.md', 'text/markdown;charset=utf-8', page.innerText || '');
-  if (k === 'pdf') { showDoc(); setTimeout(() => window.print(), 40); }
-  if (k === 'gist') saveGist().catch(e => setStatus('Не сохранилось в Gist'));
-  if (k === 'share' && navigator.share) navigator.share({title: title.value, text: page.innerText || ''}).catch(() => {});
-});
-document.getElementById('newDoc').onclick = () => {
-  document.getElementById('saveMenu').classList.remove('open');
-  page.innerHTML = ''; title.value = 'Без имени'; gistId = ''; localStorage.removeItem('g134-gist'); saveLocal(); showDoc();
-};
-document.getElementById('login').onclick = async () => {
-  localStorage.setItem('g134-token', document.getElementById('token').value.trim());
-  document.getElementById('token').value = '';
-  await refreshUser(); await listGists();
-};
-document.getElementById('logout').onclick = () => {
-  localStorage.removeItem('g134-token'); userEl.textContent = ''; document.getElementById('ghBtn').textContent = 'GitHub'; document.getElementById('gists').innerHTML = '';
-};
-window.addEventListener('dragover', e => e.preventDefault());
-window.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) document.getElementById('file').onchange({target:{files:[f]}}); });
-loadLocal(); refreshUser(); showDoc();
+const page=document.getElementById('page'),sheet=document.querySelector('.sheet'),pdf=document.getElementById('pdf'),status=document.getElementById('status'),cursor=document.getElementById('cursor'),autosaveEl=document.getElementById('autosave'),nameEl=document.getElementById('name'),menu=document.getElementById('menu'),engineEl=document.getElementById('engine'),themeSelect=document.getElementById('theme'),wrapBtn=document.getElementById('wrapBtn'),zoomReset=document.getElementById('zoomReset'),autoLayout=document.getElementById('autoLayout'),deviceState=document.getElementById('deviceState'),layoutFooter=document.getElementById('layoutFooter'),layoutButtons=[...document.querySelectorAll('[data-layout-mode]')];
+let fileName='без имени',dirty=false,pdfUrl='',zoom=100,wrap=true,wasm=null,saveTimer=0,layoutMode='auto',detectedLayout='desktop';const DRAFT_KEY='g134office-lite-draft-v2',PREF_KEY='g134office-lite-prefs-v3';
+function mark(){document.title='G134Office Lite — '+fileName+(dirty?' *':'');nameEl.textContent=fileName+(dirty?' *':'')}
+function jsWords(t){t=t.trim();return t?t.split(/\s+/u).length:0}function stats(t){if(wasm)return{words:wasm.ccall('g134_word_count','number',['string'],[t]),chars:wasm.ccall('g134_char_count','number',['string'],[t]),lines:wasm.ccall('g134_line_count','number',['string'],[t]),seconds:wasm.ccall('g134_reading_seconds','number',['string'],[t])};return{words:jsWords(t),chars:[...t].length,lines:(t.match(/\n/g)||[]).length+1,seconds:Math.ceil(jsWords(t)*60/200)}}
+function updateStatus(){if(document.body.classList.contains('pdf'))return;const t=page.innerText||'',s=stats(t),m=s.seconds<60?'<1 мин':Math.ceil(s.seconds/60)+' мин';status.textContent=`Документ · слов ${s.words} · знаков ${s.chars} · строк ${s.lines} · чтение ${m}`}
+function updateCursor(){const sel=getSelection();if(!sel||!sel.rangeCount||!page.contains(sel.anchorNode))return;const r=document.createRange();r.selectNodeContents(page);r.setEnd(sel.anchorNode,sel.anchorOffset);const b=r.toString(),ls=b.split('\n'),selected=sel.toString().length;cursor.textContent=`Стр ${ls.length} · Стлб ${ls[ls.length-1].length+1}`+(selected?` · выделено ${selected}`:'')}
+function showDoc(){document.body.classList.remove('pdf');document.getElementById('modeDoc').classList.add('on');document.getElementById('modePdf').classList.remove('on');updateStatus()}function showPdf(){document.body.classList.add('pdf');document.getElementById('modePdf').classList.add('on');document.getElementById('modeDoc').classList.remove('on');status.textContent=pdfUrl?'PDF открыт просмотром браузера':'PDF не открыт'}function baseName(){return fileName.replace(/\.[^.]+$/,'')||'document'}
+function saveBlob(name,mime,data){const blob=data instanceof Blob?data:new Blob([data],{type:mime}),a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);dirty=false;fileName=name;mark();saveDraft(true)}function xml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+const te=new TextEncoder();let crcTable=null;function crc32(bytes){if(!crcTable){crcTable=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;crcTable[n]=c>>>0}}let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0}function u16(v,a,o){a[o]=v&255;a[o+1]=(v>>>8)&255}function u32(v,a,o){u16(v&65535,a,o);u16((v>>>16)&65535,a,o+2)}function zipStore(entries){const local=[],central=[];let offset=0;for(const e of entries){const name=te.encode(e.name),data=e.data instanceof Uint8Array?e.data:te.encode(e.data),crc=crc32(data),lh=new Uint8Array(30+name.length);u32(0x04034b50,lh,0);u16(20,lh,4);u16(0,lh,6);u16(0,lh,8);u16(0,lh,10);u16(0,lh,12);u32(crc,lh,14);u32(data.length,lh,18);u32(data.length,lh,22);u16(name.length,lh,26);u16(0,lh,28);lh.set(name,30);local.push(lh,data);const ch=new Uint8Array(46+name.length);u32(0x02014b50,ch,0);u16(20,ch,4);u16(20,ch,6);u16(0,ch,8);u16(0,ch,10);u16(0,ch,12);u16(0,ch,14);u32(crc,ch,16);u32(data.length,ch,20);u32(data.length,ch,24);u16(name.length,ch,28);u16(0,ch,30);u16(0,ch,32);u16(0,ch,34);u16(0,ch,36);u32(0,ch,38);u32(offset,ch,42);ch.set(name,46);central.push(ch);offset+=lh.length+data.length}const centralSize=central.reduce((n,x)=>n+x.length,0),end=new Uint8Array(22);u32(0x06054b50,end,0);u16(0,end,4);u16(0,end,6);u16(entries.length,end,8);u16(entries.length,end,10);u32(centralSize,end,12);u32(offset,end,16);u16(0,end,20);return new Blob([...local,...central,end],{type:'application/zip'})}
+function blocks(){return [...page.childNodes].map(n=>({text:n.textContent||'',align:n.nodeType===1?(getComputedStyle(n).textAlign||'left'):'left'}))}function docx(){const ps=blocks().map(b=>`<w:p><w:pPr><w:jc w:val="${b.align==='center'?'center':b.align==='right'?'right':b.align==='justify'?'both':'left'}"/></w:pPr><w:r><w:t xml:space="preserve">${xml(b.text)}</w:t></w:r></w:p>`).join('');return zipStore([{name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'},{name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},{name:'word/document.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${ps}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr></w:body></w:document>`}])}
+function odt(){const ps=blocks().map(b=>`<text:p>${xml(b.text)}</text:p>`).join('');const content=`<?xml version="1.0" encoding="UTF-8"?><office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" office:version="1.3"><office:body><office:text>${ps}</office:text></office:body></office:document-content>`,manifest='<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.3"><manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/></manifest:manifest>';return zipStore([{name:'mimetype',data:'application/vnd.oasis.opendocument.text'},{name:'content.xml',data:content},{name:'META-INF/manifest.xml',data:manifest}])}
+function rtf(){const t=page.innerText||'';let o='{\\rtf1\\ansi\\uc1\\deff0{\\fonttbl{\\f0 Calibri;}}\\f0\\fs24 ';for(const ch of t){const c=ch.charCodeAt(0);if(ch==='\\')o+='\\\\';else if(ch==='{')o+='\\{';else if(ch==='}')o+='\\}';else if(ch==='\n')o+='\\par\n';else if(c>=32&&c<127)o+=ch;else o+='\\u'+(c>32767?c-65536:c)+'?'}return o+'}'}function printPdf(){const w=window.open('','_blank');if(!w){alert('Разрешите всплывающее окно для сохранения PDF.');return}w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${xml(baseName())}</title><style>body{font-family:Calibri,Arial,sans-serif;margin:0}main{width:170mm;margin:auto;padding:18mm 20mm;font-size:12pt;line-height:1.5}@page{size:A4;margin:0}</style></head><body><main>${page.innerHTML}</main><script>onload=()=>setTimeout(()=>print(),150)<\/script></body></html>`);w.document.close()}
+async function exportFormat(k){menu.classList.remove('open');showDoc();try{if(k==='txt')saveBlob(baseName()+'.txt','text/plain;charset=utf-8',page.innerText||'');else if(k==='rtf')saveBlob(baseName()+'.rtf','application/rtf;charset=utf-8',rtf());else if(k==='docx')saveBlob(baseName()+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document',docx());else if(k==='odt')saveBlob(baseName()+'.odt','application/vnd.oasis.opendocument.text',odt());else if(k==='pdf')printPdf();else if(k==='share'){const f=new File([page.innerText||''],baseName()+'.txt',{type:'text/plain'});if(navigator.share)await navigator.share({title:fileName,files:[f]}).catch(()=>navigator.share({title:fileName,text:page.innerText||''}));else alert('На этом устройстве нет функции «Поделиться».')}}catch(e){console.error(e);alert('Не удалось сохранить файл: '+(e?.message||e))}}
+function detectDeviceLayout(){const w=Math.min(innerWidth||9999,screen.width||9999),h=Math.min(innerHeight||9999,screen.height||9999),coarse=matchMedia('(pointer: coarse)').matches,touch=(navigator.maxTouchPoints||0)>0,short=Math.min(w,h),long=Math.max(w,h);if((coarse||touch)&&short<=600)return'phone';if((coarse||touch)&&short<=1000&&long<=1400)return'tablet';if(innerWidth<=620)return'phone';if(innerWidth<=1024)return'tablet';return'desktop'}function layoutTitle(m){return m==='phone'?'телефон':m==='tablet'?'планшет':'компьютер'}function applyLayout(mode,persist=true){detectedLayout=detectDeviceLayout();layoutMode=mode==='auto'?'auto':mode;const actual=layoutMode==='auto'?detectedLayout:layoutMode;document.body.dataset.layout=actual;autoLayout.checked=layoutMode==='auto';layoutButtons.forEach(b=>b.classList.toggle('on',layoutMode!=='auto'&&b.dataset.layoutMode===actual));deviceState.textContent=`Устройство: ${layoutTitle(detectedLayout)} · ${layoutMode==='auto'?'авто':'вручную: '+layoutTitle(actual)}`;layoutFooter.textContent=`Вид: ${layoutMode==='auto'?'авто → ':''}${layoutTitle(actual)}`;if(persist)savePrefs()}function savePrefs(){localStorage.setItem(PREF_KEY,JSON.stringify({theme:themeSelect.value,zoom,wrap,layoutMode}))}function saveDraft(now=false){clearTimeout(saveTimer);const run=()=>{localStorage.setItem(DRAFT_KEY,JSON.stringify({html:page.innerHTML,fileName,ts:Date.now()}));autosaveEl.textContent='Сохранено локально · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};now?run():saveTimer=setTimeout(run,700)}function restoreDraft(){try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');if(d&&d.html){page.innerHTML=d.html;fileName=d.fileName||'авточерновик';dirty=false}}catch{}}function applyTheme(v){let a=v;if(v==='system')a=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.body.dataset.theme=a;document.getElementById('themeMeta').content=a==='dark'?'#22252b':a==='sepia'?'#f4ecdc':'#f7f8fa';savePrefs()}function applyZoom(v){zoom=Math.min(160,Math.max(60,v));sheet.style.transform=`scale(${zoom/100})`;sheet.style.marginBottom=`${Math.max(0,(zoom-100)*8)}px`;zoomReset.textContent=zoom+'%';savePrefs()}function applyWrap(v){wrap=v;page.classList.toggle('no-wrap',!wrap);wrapBtn.classList.toggle('on',wrap);savePrefs()}function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREF_KEY)||'{}');themeSelect.value=p.theme||'system';zoom=Number(p.zoom)||100;wrap=p.wrap!==false;layoutMode=p.layoutMode||'auto';applyTheme(themeSelect.value);applyZoom(zoom);applyWrap(wrap);applyLayout(layoutMode,false)}catch{themeSelect.value='system';applyTheme('system');applyLayout('auto',false)}}function openPdf(file){if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl=URL.createObjectURL(file);pdf.src=pdfUrl;fileName=file.name;dirty=false;mark();showPdf()}async function openAny(file){if(!file)return;if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){openPdf(file);return}const text=await file.text();if(/\.(html|htm)$/i.test(file.name))page.innerHTML=text;else page.innerText=text;fileName=file.name;dirty=false;mark();showDoc();saveDraft(true)}async function initWasm(){try{if(typeof G134LiteCore!=='function')throw new Error('loader missing');wasm=await G134LiteCore();engineEl.textContent='C++ WASM: активен';updateStatus()}catch(e){engineEl.textContent='C++ WASM: JS fallback';console.warn(e)}}
+page.addEventListener('input',()=>{dirty=true;mark();updateStatus();updateCursor();saveDraft()});page.addEventListener('keyup',updateCursor);page.addEventListener('mouseup',updateCursor);document.querySelectorAll('[data-cmd]').forEach(btn=>btn.onclick=()=>{page.focus();document.execCommand(btn.dataset.cmd);dirty=true;mark();updateStatus();saveDraft()});document.getElementById('font').onchange=e=>{page.focus();document.execCommand('fontName',false,e.target.value);saveDraft()};document.getElementById('size').onchange=e=>{page.focus();document.execCommand('fontSize',false,'4');page.querySelectorAll('font[size="4"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=e.target.value+'px'});saveDraft()};document.getElementById('undo').onclick=()=>document.execCommand('undo');document.getElementById('modeDoc').onclick=showDoc;document.getElementById('modePdf').onclick=showPdf;document.getElementById('open').onclick=()=>document.getElementById('file').click();document.getElementById('file').onchange=e=>openAny(e.target.files[0]);document.getElementById('saveBtn').onclick=()=>menu.classList.add('open');document.getElementById('closeMenu').onclick=()=>menu.classList.remove('open');menu.onclick=e=>{if(e.target===menu)menu.classList.remove('open')};themeSelect.onchange=e=>applyTheme(e.target.value);matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(themeSelect.value==='system')applyTheme('system')});wrapBtn.onclick=()=>applyWrap(!wrap);document.getElementById('zoomOut').onclick=()=>applyZoom(zoom-10);document.getElementById('zoomIn').onclick=()=>applyZoom(zoom+10);zoomReset.onclick=()=>applyZoom(100);document.getElementById('focusBtn').onclick=()=>{document.body.classList.toggle('focus');document.getElementById('focusBtn').classList.toggle('on')};document.getElementById('fullBtn').onclick=async()=>{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.();else await document.exitFullscreen?.()};autoLayout.addEventListener('change',()=>applyLayout(autoLayout.checked?'auto':detectedLayout));layoutButtons.forEach(btn=>btn.addEventListener('click',()=>applyLayout(btn.dataset.layoutMode)));addEventListener('resize',()=>{clearTimeout(window.__g134Resize);window.__g134Resize=setTimeout(()=>{if(layoutMode==='auto')applyLayout('auto',false)},120)});addEventListener('orientationchange',()=>setTimeout(()=>{if(layoutMode==='auto')applyLayout('auto',false)},180));document.querySelectorAll('[data-save]').forEach(btn=>btn.onclick=()=>exportFormat(btn.dataset.save));document.getElementById('new').onclick=()=>{menu.classList.remove('open');if(dirty&&!confirm('Сбросить изменения?'))return;page.innerHTML='';fileName='без имени';dirty=false;mark();showDoc();saveDraft(true)};document.getElementById('find').onclick=()=>{const q=document.getElementById('q').value;if(q)window.find(q)};addEventListener('keydown',e=>{if(!e.ctrlKey)return;const k=e.key.toLowerCase();if(k==='s'){e.preventDefault();menu.classList.add('open')}if(k==='o'){e.preventDefault();document.getElementById('file').click()}if(k==='n'){e.preventDefault();document.getElementById('new').click()}if(k==='f'){e.preventDefault();document.getElementById('q').focus()}if(k==='0'){e.preventDefault();applyZoom(100)}if(k==='+'||k==='='){e.preventDefault();applyZoom(zoom+10)}if(k==='-'){e.preventDefault();applyZoom(zoom-10)}});addEventListener('dragover',e=>e.preventDefault());addEventListener('drop',e=>{e.preventDefault();openAny(e.dataTransfer.files[0])});addEventListener('beforeunload',e=>{if(dirty){saveDraft(true);e.preventDefault()}});restoreDraft();loadPrefs();mark();showDoc();updateCursor();initWasm();
 </script>
 </body>
 </html>
