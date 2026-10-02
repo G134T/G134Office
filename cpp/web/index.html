@@ -7,99 +7,52 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>G134Office Lite</title>
 <style>
-  :root {
-    --desk:#e7ebf0; --bar:#f7f8fa; --line:#d5dbe3; --ink:#1a1a1a;
-    --muted:#52606d; --paper:#fff; --button:#fff; --button-hover:#eef3f8;
-    --accent:#d9e7f7; --accent-line:#8eb0d4; --shadow:rgba(20,30,40,.16);
-    --safe-t:env(safe-area-inset-top); --safe-b:env(safe-area-inset-bottom);
-  }
-  body[data-theme="dark"] {
-    --desk:#17191d; --bar:#22252b; --line:#343943; --ink:#e9edf2;
-    --muted:#aeb7c2; --paper:#262a31; --button:#2e333b; --button-hover:#3a414c;
-    --accent:#294766; --accent-line:#5484b5; --shadow:rgba(0,0,0,.42);
-  }
-  body[data-theme="sepia"] {
-    --desk:#e7dfcf; --bar:#f4ecdc; --line:#d3c4a7; --ink:#403729;
-    --muted:#746550; --paper:#fff8e8; --button:#fffaf0; --button-hover:#efe3ca;
-    --accent:#ead7ad; --accent-line:#b99b62; --shadow:rgba(70,50,20,.18);
-  }
-  * { box-sizing:border-box; }
-  html,body { margin:0; height:100%; }
-  body { display:flex; flex-direction:column; background:var(--desk); color:var(--ink); font-family:"Segoe UI",system-ui,sans-serif; transition:background .18s,color .18s; }
-  header { position:sticky; top:0; z-index:2; background:var(--bar); border-bottom:1px solid var(--line); padding-top:var(--safe-t); }
-  .row { display:flex; gap:8px; align-items:center; padding:8px 10px; }
-  .tools { overflow-x:auto; -webkit-overflow-scrolling:touch; white-space:nowrap; }
-  button,select,input { font:14px "Segoe UI",system-ui,sans-serif; color:var(--ink); }
-  button,select { min-height:36px; background:var(--button); border:1px solid var(--line); border-radius:8px; padding:5px 10px; cursor:pointer; }
-  button:hover { background:var(--button-hover); }
-  button.on { background:var(--accent); border-color:var(--accent-line); }
-  #q { width:140px; min-height:36px; padding:5px 8px; color:var(--ink); background:var(--button); border:1px solid var(--line); border-radius:8px; }
-  #name { margin-left:auto; color:var(--muted); font-size:13px; max-width:32vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #engine,#deviceState { font-size:12px; color:var(--muted); white-space:nowrap; }
-  #layoutRow { border-top:1px solid var(--line); padding-top:6px; padding-bottom:6px; }
-  .layout-label { color:var(--muted); font-size:12px; font-weight:600; }
-  .layout-buttons { display:flex; gap:5px; }
-  .layout-buttons button { min-height:32px; padding:4px 9px; font-size:12px; }
-  .auto-check { display:inline-flex; align-items:center; gap:6px; padding:4px 7px; border:1px solid var(--line); border-radius:8px; background:var(--button); font-size:12px; cursor:pointer; white-space:nowrap; }
-  .auto-check input { accent-color:#3b82f6; }
-  main { flex:1; overflow:auto; padding:18px 8px calc(24px + var(--safe-b)); }
-  .sheet { width:min(794px,100%); min-height:70vh; margin:0 auto; background:var(--paper); box-shadow:0 8px 28px var(--shadow); border-radius:3px; transform-origin:top center; }
-  #page { min-height:70vh; padding:28px 24px 56px; outline:none; font:17px/1.55 Calibri,"Segoe UI",sans-serif; color:var(--ink); overflow-wrap:anywhere; }
-  #page.no-wrap { white-space:pre; overflow-wrap:normal; overflow-x:auto; }
-  #page:empty:before { content:"Начните писать или перетащите файл"; color:var(--muted); opacity:.65; }
-  #pdf { display:none; width:100%; height:calc(100vh - 170px); border:0; background:#fff; }
-  body.pdf .sheet { display:none; }
-  body.pdf #pdf { display:block; }
-  body.pdf #tools { display:none; }
-  body.focus header .row:first-child, body.focus #layoutRow, body.focus footer { display:none; }
-  body.focus header { border:0; }
-  footer { padding:8px 12px calc(8px + var(--safe-b)); background:var(--bar); border-top:1px solid var(--line); color:var(--muted); font-size:12px; display:flex; gap:14px; flex-wrap:wrap; }
-  #menu { position:fixed; inset:0; background:rgba(0,0,0,.38); display:none; z-index:5; }
-  #menu.open { display:block; }
-  #menu .panel { position:absolute; left:0; right:0; bottom:0; background:var(--bar); border-radius:16px 16px 0 0; padding:12px 12px calc(16px + var(--safe-b)); display:grid; gap:8px; }
-  #menu h2 { margin:4px 8px 8px; font-size:16px; }
-
-  /* Телефон */
-  body[data-layout="phone"] header .row:first-child { gap:5px; padding:6px; }
-  body[data-layout="phone"] header .row:first-child button { min-height:38px; padding:5px 8px; font-size:12px; }
-  body[data-layout="phone"] #focusBtn, body[data-layout="phone"] #fullBtn, body[data-layout="phone"] #engine { display:none; }
-  body[data-layout="phone"] #name { max-width:28vw; font-size:11px; }
-  body[data-layout="phone"] #layoutRow { overflow-x:auto; flex-wrap:nowrap; gap:5px; padding:5px 6px; }
-  body[data-layout="phone"] .layout-label { display:none; }
-  body[data-layout="phone"] .layout-buttons button { min-width:64px; }
-  body[data-layout="phone"] #tools { padding:6px; gap:5px; }
-  body[data-layout="phone"] #tools button, body[data-layout="phone"] #tools select { min-height:40px; }
-  body[data-layout="phone"] #q { min-height:40px; width:110px; }
-  body[data-layout="phone"] main { padding:0 0 calc(12px + var(--safe-b)); }
-  body[data-layout="phone"] .sheet { width:100%; min-height:calc(100vh - 190px); border-radius:0; box-shadow:none; }
-  body[data-layout="phone"] #page { min-height:calc(100vh - 190px); padding:20px 14px 60px; font-size:17px; line-height:1.58; }
-  body[data-layout="phone"] footer { gap:8px; padding:6px 8px calc(7px + var(--safe-b)); font-size:11px; }
-  body[data-layout="phone"] #cursor { display:none; }
-  body[data-layout="phone"] #menu .panel { max-height:82vh; overflow:auto; }
-
-  /* Планшет */
-  body[data-layout="tablet"] .row { flex-wrap:wrap; }
-  body[data-layout="tablet"] #name { max-width:28vw; }
-  body[data-layout="tablet"] main { padding:18px 16px calc(24px + var(--safe-b)); }
-  body[data-layout="tablet"] .sheet { width:min(760px,100%); }
-  body[data-layout="tablet"] #page { padding:48px 48px 70px; font-size:17px; }
-  body[data-layout="tablet"] #layoutRow { padding-left:10px; }
-
-  /* Компьютер */
-  body[data-layout="desktop"] .sheet { min-height:1123px; width:794px; }
-  body[data-layout="desktop"] #page { min-height:1123px; padding:72px 76px; }
-  body[data-layout="desktop"] main { padding:28px 12px 48px; }
-  body[data-layout="desktop"] #menu .panel { left:auto; width:340px; top:64px; bottom:auto; right:12px; border-radius:12px; }
-
-  @media (max-width:430px) {
-    body[data-layout="auto"] main { padding:0; }
-  }
-  @media print {
-    header,footer,#pdf,#menu { display:none !important; }
-    main { padding:0; background:#fff; overflow:visible; }
-    .sheet { box-shadow:none; width:auto !important; transform:none !important; display:block !important; background:#fff; }
-    #page { color:#000; min-height:auto !important; padding:20mm !important; }
-  }
+:root{
+  --desk:#e7ebf0;--bar:#f7f8fa;--line:#d5dbe3;--ink:#1a1a1a;--muted:#52606d;
+  --paper:#fff;--button:#fff;--button-hover:#eef3f8;--accent:#d9e7f7;--accent-line:#8eb0d4;
+  --shadow:rgba(20,30,40,.16);--safe-t:env(safe-area-inset-top);--safe-b:env(safe-area-inset-bottom)
+}
+body[data-theme="dark"]{--desk:#17191d;--bar:#22252b;--line:#343943;--ink:#e9edf2;--muted:#aeb7c2;--paper:#262a31;--button:#2e333b;--button-hover:#3a414c;--accent:#294766;--accent-line:#5484b5;--shadow:rgba(0,0,0,.42)}
+body[data-theme="sepia"]{--desk:#e7dfcf;--bar:#f4ecdc;--line:#d3c4a7;--ink:#403729;--muted:#746550;--paper:#fff8e8;--button:#fffaf0;--button-hover:#efe3ca;--accent:#ead7ad;--accent-line:#b99b62;--shadow:rgba(70,50,20,.18)}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{display:flex;flex-direction:column;background:var(--desk);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif}
+header{position:sticky;top:0;z-index:2;background:var(--bar);border-bottom:1px solid var(--line);padding-top:var(--safe-t)}
+.row{display:flex;gap:8px;align-items:center;padding:8px 10px}.tools{overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+button,select,input{font:14px "Segoe UI",system-ui,sans-serif;color:var(--ink)}
+button,select{min-height:36px;background:var(--button);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}
+button:hover{background:var(--button-hover)}button.on{background:var(--accent);border-color:var(--accent-line)}
+#q{width:140px;min-height:36px;padding:5px 8px;color:var(--ink);background:var(--button);border:1px solid var(--line);border-radius:8px}
+#name{margin-left:auto;color:var(--muted);font-size:13px;max-width:32vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#engine,#deviceState{font-size:12px;color:var(--muted);white-space:nowrap}
+#layoutRow{border-top:1px solid var(--line);padding-top:6px;padding-bottom:6px}.layout-label{color:var(--muted);font-size:12px;font-weight:600}
+.layout-buttons{display:flex;gap:5px}.layout-buttons button{min-height:32px;padding:4px 9px;font-size:12px}
+.auto-check{display:inline-flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid var(--line);border-radius:8px;background:var(--button);font-size:12px;cursor:pointer;white-space:nowrap}
+.auto-check input{accent-color:#3b82f6}
+main{flex:1;overflow:auto;padding:18px 8px calc(24px + var(--safe-b))}
+.sheet{width:min(794px,100%);min-height:70vh;margin:0 auto;background:var(--paper);box-shadow:0 8px 28px var(--shadow);border-radius:3px;transform-origin:top center}
+#page{min-height:70vh;padding:28px 24px 56px;outline:none;font:17px/1.55 Calibri,"Segoe UI",sans-serif;color:var(--ink);overflow-wrap:anywhere}
+#page.no-wrap{white-space:pre;overflow-wrap:normal;overflow-x:auto}#page:empty:before{content:"Начните писать или перетащите файл";color:var(--muted);opacity:.65}
+#pdf{display:none;width:100%;height:calc(100vh - 170px);border:0;background:#fff}body.pdf .sheet{display:none}body.pdf #pdf{display:block}body.pdf #tools{display:none}
+body.focus header .row:first-child,body.focus #layoutRow,body.focus footer{display:none}body.focus header{border:0}
+footer{padding:8px 12px calc(8px + var(--safe-b));background:var(--bar);border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:14px;flex-wrap:wrap}
+#menu{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;z-index:5}#menu.open{display:block}
+#menu .panel{position:absolute;left:0;right:0;bottom:0;background:var(--bar);border-radius:16px 16px 0 0;padding:12px 12px calc(16px + var(--safe-b));display:grid;gap:8px;max-height:90vh;overflow:auto}
+#menu h2{margin:4px 8px 0;font-size:18px}.format-note{margin:0 8px 8px;color:var(--muted);font-size:12px;line-height:1.4}
+.format-btn{display:flex;align-items:center;justify-content:space-between;text-align:left}.format-btn small{color:var(--muted);margin-left:10px}
+body[data-layout="phone"] header .row:first-child{gap:5px;padding:6px}body[data-layout="phone"] header .row:first-child button{min-height:38px;padding:5px 8px;font-size:12px}
+body[data-layout="phone"] #focusBtn,body[data-layout="phone"] #fullBtn,body[data-layout="phone"] #engine{display:none}
+body[data-layout="phone"] #name{max-width:28vw;font-size:11px}body[data-layout="phone"] #layoutRow{overflow-x:auto;flex-wrap:nowrap;gap:5px;padding:5px 6px}
+body[data-layout="phone"] .layout-label{display:none}body[data-layout="phone"] .layout-buttons button{min-width:64px}
+body[data-layout="phone"] #tools{padding:6px;gap:5px}body[data-layout="phone"] #tools button,body[data-layout="phone"] #tools select{min-height:40px}
+body[data-layout="phone"] #q{min-height:40px;width:110px}body[data-layout="phone"] main{padding:0 0 calc(12px + var(--safe-b))}
+body[data-layout="phone"] .sheet{width:100%;min-height:calc(100vh - 190px);border-radius:0;box-shadow:none}
+body[data-layout="phone"] #page{min-height:calc(100vh - 190px);padding:20px 14px 60px;font-size:17px;line-height:1.58}
+body[data-layout="phone"] footer{gap:8px;padding:6px 8px calc(7px + var(--safe-b));font-size:11px}body[data-layout="phone"] #cursor{display:none}
+body[data-layout="tablet"] .row{flex-wrap:wrap}body[data-layout="tablet"] #name{max-width:28vw}body[data-layout="tablet"] main{padding:18px 16px calc(24px + var(--safe-b))}
+body[data-layout="tablet"] .sheet{width:min(760px,100%)}body[data-layout="tablet"] #page{padding:48px 48px 70px;font-size:17px}
+body[data-layout="desktop"] .sheet{min-height:1123px;width:794px}body[data-layout="desktop"] #page{min-height:1123px;padding:72px 76px}
+body[data-layout="desktop"] main{padding:28px 12px 48px}body[data-layout="desktop"] #menu .panel{left:auto;width:390px;top:64px;bottom:auto;right:12px;border-radius:12px}
+@media print{header,footer,#pdf,#menu{display:none!important}main{padding:0;background:#fff;overflow:visible}.sheet{box-shadow:none;width:auto!important;transform:none!important;display:block!important;background:#fff}#page{color:#000;min-height:auto!important;padding:20mm!important}}
 </style>
 </head>
 <body data-theme="light" data-layout="desktop">
@@ -114,7 +67,6 @@
     <span id="engine">C++: загрузка…</span>
     <span id="name">без имени</span>
   </div>
-
   <div class="row" id="layoutRow">
     <span class="layout-label">Вид:</span>
     <label class="auto-check"><input id="autoLayout" type="checkbox" checked> Авто</label>
@@ -125,198 +77,146 @@
     </div>
     <span id="deviceState">Определение устройства…</span>
   </div>
-
   <div class="row tools" id="tools">
-    <select id="theme" title="Тема">
-      <option value="system">Системная тема</option>
-      <option value="light">Светлая</option>
-      <option value="dark">Тёмная</option>
-      <option value="sepia">Сепия</option>
-    </select>
+    <select id="theme" title="Тема"><option value="system">Системная тема</option><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="sepia">Сепия</option></select>
     <select id="font"><option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option></select>
     <select id="size"><option>14</option><option selected>17</option><option>20</option><option>24</option><option>28</option></select>
-    <button data-cmd="bold" type="button"><b>B</b></button>
-    <button data-cmd="italic" type="button"><i>I</i></button>
-    <button data-cmd="underline" type="button"><u>U</u></button>
-    <button data-cmd="justifyLeft" type="button">Лево</button>
-    <button data-cmd="justifyCenter" type="button">Центр</button>
-    <button data-cmd="justifyRight" type="button">Право</button>
-    <button data-cmd="insertUnorderedList" type="button">Список</button>
-    <button id="undo" type="button">Отмена</button>
-    <button id="wrapBtn" class="on" type="button">Перенос</button>
-    <button id="zoomOut" type="button">−</button>
-    <button id="zoomReset" type="button">100%</button>
-    <button id="zoomIn" type="button">+</button>
-    <input id="q" placeholder="Найти">
-    <button id="find" type="button">Найти</button>
+    <button data-cmd="bold" type="button"><b>B</b></button><button data-cmd="italic" type="button"><i>I</i></button><button data-cmd="underline" type="button"><u>U</u></button>
+    <button data-cmd="justifyLeft" type="button">Лево</button><button data-cmd="justifyCenter" type="button">Центр</button><button data-cmd="justifyRight" type="button">Право</button>
+    <button data-cmd="insertUnorderedList" type="button">Список</button><button id="undo" type="button">Отмена</button><button id="wrapBtn" class="on" type="button">Перенос</button>
+    <button id="zoomOut" type="button">−</button><button id="zoomReset" type="button">100%</button><button id="zoomIn" type="button">+</button>
+    <input id="q" placeholder="Найти"><button id="find" type="button">Найти</button>
   </div>
 </header>
-<main>
-  <div class="sheet"><div id="page" contenteditable="true" spellcheck="true"></div></div>
-  <iframe id="pdf" title="PDF"></iframe>
-</main>
-<footer>
-  <span id="status">Документ</span>
-  <span id="cursor">Стр 1 · Стлб 1</span>
-  <span id="autosave">Автосохранение включено</span>
-  <span id="layoutFooter">Вид: авто</span>
-</footer>
-<div id="menu">
-  <div class="panel">
-    <h2>Сохранить как</h2>
-    <button data-save="txt" type="button">Текст .txt</button>
-    <button data-save="html" type="button">Страница .html</button>
-    <button data-save="doc" type="button">Word .doc</button>
-    <button data-save="md" type="button">Markdown .md</button>
-    <button data-save="pdf" type="button">PDF через печать</button>
-    <button data-save="share" type="button">Поделиться</button>
-    <button id="new" type="button">Новый документ</button>
-    <button id="closeMenu" type="button">Закрыть</button>
-  </div>
-</div>
-<input id="file" type="file" accept=".txt,.html,.htm,.md,.doc,.pdf,text/plain,text/html,application/pdf" hidden>
+<main><div class="sheet"><div id="page" contenteditable="true" spellcheck="true"></div></div><iframe id="pdf" title="PDF"></iframe></main>
+<footer><span id="status">Документ</span><span id="cursor">Стр 1 · Стлб 1</span><span id="autosave">Автосохранение включено</span><span id="layoutFooter">Вид: авто</span></footer>
+<div id="menu"><div class="panel">
+  <h2>Сохранить документ</h2>
+  <p class="format-note">DOCX и ODT создаются как настоящие контейнеры документов. Файл остаётся на вашем устройстве и никуда не отправляется.</p>
+  <button class="format-btn" data-save="docx" type="button"><span>Word .docx</span><small>Google Docs / Word</small></button>
+  <button class="format-btn" data-save="odt" type="button"><span>OpenDocument .odt</span><small>LibreOffice / Google Docs</small></button>
+  <button class="format-btn" data-save="rtf" type="button"><span>Rich Text .rtf</span><small>совместимый текст</small></button>
+  <button class="format-btn" data-save="txt" type="button"><span>Текст .txt</span><small>UTF-8</small></button>
+  <button class="format-btn" data-save="pdf" type="button"><span>PDF</span><small>системное «Сохранить как PDF»</small></button>
+  <button data-save="share" type="button">Поделиться текстом</button>
+  <button id="new" type="button">Новый документ</button><button id="closeMenu" type="button">Закрыть</button>
+</div></div>
+<input id="file" type="file" accept=".txt,.html,.htm,.md,.pdf,text/plain,text/html,application/pdf" hidden>
 <script src="g134lite.js"></script>
 <script>
-const page = document.getElementById('page');
-const sheet = document.querySelector('.sheet');
-const pdf = document.getElementById('pdf');
-const status = document.getElementById('status');
-const cursor = document.getElementById('cursor');
-const autosaveEl = document.getElementById('autosave');
-const nameEl = document.getElementById('name');
-const menu = document.getElementById('menu');
-const engineEl = document.getElementById('engine');
-const themeSelect = document.getElementById('theme');
-const wrapBtn = document.getElementById('wrapBtn');
-const zoomReset = document.getElementById('zoomReset');
-const autoLayout = document.getElementById('autoLayout');
-const deviceState = document.getElementById('deviceState');
-const layoutFooter = document.getElementById('layoutFooter');
-const layoutButtons = [...document.querySelectorAll('[data-layout-mode]')];
-let fileName='без имени',dirty=false,pdfUrl='',zoom=100,wrap=true,wasm=null,saveTimer=0;
-let layoutMode='auto', detectedLayout='desktop';
-const DRAFT_KEY='g134office-lite-draft-v2';
-const PREF_KEY='g134office-lite-prefs-v3';
+const page=document.getElementById('page'),sheet=document.querySelector('.sheet'),pdf=document.getElementById('pdf'),status=document.getElementById('status'),cursor=document.getElementById('cursor'),autosaveEl=document.getElementById('autosave'),nameEl=document.getElementById('name'),menu=document.getElementById('menu'),engineEl=document.getElementById('engine'),themeSelect=document.getElementById('theme'),wrapBtn=document.getElementById('wrapBtn'),zoomReset=document.getElementById('zoomReset'),autoLayout=document.getElementById('autoLayout'),deviceState=document.getElementById('deviceState'),layoutFooter=document.getElementById('layoutFooter'),layoutButtons=[...document.querySelectorAll('[data-layout-mode]')];
+let fileName='без имени',dirty=false,pdfUrl='',zoom=100,wrap=true,wasm=null,saveTimer=0,layoutMode='auto',detectedLayout='desktop';
+const DRAFT_KEY='g134office-lite-draft-v3',PREF_KEY='g134office-lite-prefs-v4',enc=new TextEncoder();
 
-function mark(){
-  document.title='G134Office Lite — '+fileName+(dirty?' *':'');
-  nameEl.textContent=fileName+(dirty?' *':'');
+function mark(){document.title='G134Office Lite — '+fileName+(dirty?' *':'');nameEl.textContent=fileName+(dirty?' *':'')}
+function jsWords(text){const t=text.trim();return t?t.split(/\s+/u).length:0}
+function stats(text){if(wasm)return{words:wasm.ccall('g134_word_count','number',['string'],[text]),chars:wasm.ccall('g134_char_count','number',['string'],[text]),lines:wasm.ccall('g134_line_count','number',['string'],[text]),seconds:wasm.ccall('g134_reading_seconds','number',['string'],[text])};return{words:jsWords(text),chars:[...text].length,lines:(text.match(/\n/g)||[]).length+1,seconds:Math.ceil(jsWords(text)*60/200)}}
+function updateStatus(){if(document.body.classList.contains('pdf'))return;const s=stats(page.innerText||''),mins=s.seconds<60?'<1 мин':Math.ceil(s.seconds/60)+' мин';status.textContent=`Документ · слов ${s.words} · знаков ${s.chars} · строк ${s.lines} · чтение ${mins}`}
+function updateCursor(){const sel=getSelection();if(!sel||!sel.rangeCount||!page.contains(sel.anchorNode))return;const r=document.createRange();r.selectNodeContents(page);r.setEnd(sel.anchorNode,sel.anchorOffset);const lines=r.toString().split('\n'),selected=sel.toString().length;cursor.textContent=`Стр ${lines.length} · Стлб ${lines.at(-1).length+1}`+(selected?` · выделено ${selected}`:'')}
+function showDoc(){document.body.classList.remove('pdf');document.getElementById('modeDoc').classList.add('on');document.getElementById('modePdf').classList.remove('on');updateStatus()}
+function showPdf(){document.body.classList.add('pdf');document.getElementById('modePdf').classList.add('on');document.getElementById('modeDoc').classList.remove('on');status.textContent=pdfUrl?'PDF открыт просмотром браузера':'PDF не открыт'}
+function baseName(){return fileName.replace(/\.[^.]+$/,'')||'document'}
+function xml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')}
+function bytes(data){return data instanceof Uint8Array?data:enc.encode(String(data))}
+function u16(n){return new Uint8Array([n&255,(n>>>8)&255])}
+function u32(n){return new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255])}
+function join(parts){let n=0;for(const p of parts)n+=p.length;const out=new Uint8Array(n);let o=0;for(const p of parts){out.set(p,o);o+=p.length}return out}
+const crcTable=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(data){let c=0xffffffff;for(const b of data)c=crcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0}
+function dosStamp(){const d=new Date(),time=((d.getHours()&31)<<11)|((d.getMinutes()&63)<<5)|((d.getSeconds()/2)&31),date=(((d.getFullYear()-1980)&127)<<9)|(((d.getMonth()+1)&15)<<5)|(d.getDate()&31);return{time,date}}
+function zipStore(entries){
+  const locals=[],centrals=[];let offset=0;const stamp=dosStamp();
+  for(const e of entries){const name=enc.encode(e.name),data=bytes(e.data),crc=crc32(data),flags=0x0800,method=0;
+    const local=join([u32(0x04034b50),u16(20),u16(flags),u16(method),u16(stamp.time),u16(stamp.date),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),name,data]);
+    locals.push(local);
+    centrals.push(join([u32(0x02014b50),u16(20),u16(20),u16(flags),u16(method),u16(stamp.time),u16(stamp.date),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),name]));
+    offset+=local.length
+  }
+  const central=join(centrals),body=join(locals),end=join([u32(0x06054b50),u16(0),u16(0),u16(entries.length),u16(entries.length),u32(central.length),u32(body.length),u16(0)]);
+  return join([body,central,end])
 }
-function jsWords(text){const t=text.trim();return t?t.split(/\s+/u).length:0;}
-function stats(text){
-  if(wasm){return{
-    words:wasm.ccall('g134_word_count','number',['string'],[text]),
-    chars:wasm.ccall('g134_char_count','number',['string'],[text]),
-    lines:wasm.ccall('g134_line_count','number',['string'],[text]),
-    seconds:wasm.ccall('g134_reading_seconds','number',['string'],[text])
-  };}
-  return{words:jsWords(text),chars:[...text].length,lines:(text.match(/\n/g)||[]).length+1,seconds:Math.ceil(jsWords(text)*60/200)};
+function saveBlob(name,mime,data){
+  const blob=data instanceof Blob?data:new Blob([data],{type:mime}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  dirty=false;fileName=name;mark();saveDraft(true);autosaveEl.textContent='Сохранено: '+name
 }
-function updateStatus(){
-  if(document.body.classList.contains('pdf'))return;
-  const text=page.innerText||'';const s=stats(text);const mins=s.seconds<60?'<1 мин':Math.ceil(s.seconds/60)+' мин';
-  status.textContent=`Документ · слов ${s.words} · знаков ${s.chars} · строк ${s.lines} · чтение ${mins}`;
+function blockModel(){
+  const blocks=[];const blockTags=new Set(['DIV','P','H1','H2','H3','H4','LI','PRE','BLOCKQUOTE']);
+  function runs(node,fmt={b:false,i:false,u:false}){if(node.nodeType===3)return node.nodeValue?[{text:node.nodeValue,...fmt}]:[];if(node.nodeType!==1)return[];const tag=node.tagName,nf={b:fmt.b||tag==='B'||tag==='STRONG',i:fmt.i||tag==='I'||tag==='EM',u:fmt.u||tag==='U'};if(tag==='BR')return[{text:'\n',...nf}];return[...node.childNodes].flatMap(n=>runs(n,nf))}
+  for(const n of page.childNodes){if(n.nodeType===3){if(n.nodeValue?.trim())blocks.push({runs:[{text:n.nodeValue,b:false,i:false,u:false}],align:'left'})}else if(n.nodeType===1){if(blockTags.has(n.tagName)){let rr=runs(n);if(n.tagName==='LI')rr=[{text:'• ',b:false,i:false,u:false},...rr];blocks.push({runs:rr,align:getComputedStyle(n).textAlign||'left'})}else blocks.push({runs:runs(n),align:getComputedStyle(n).textAlign||'left'})}}
+  if(!blocks.length)blocks.push({runs:[{text:'',b:false,i:false,u:false}],align:'left'});return blocks
 }
-function updateCursor(){
-  const sel=getSelection();if(!sel||!sel.rangeCount||!page.contains(sel.anchorNode))return;
-  const range=document.createRange();range.selectNodeContents(page);range.setEnd(sel.anchorNode,sel.anchorOffset);
-  const before=range.toString();const lines=before.split('\n');const selected=sel.toString().length;
-  cursor.textContent=`Стр ${lines.length} · Стлб ${lines[lines.length-1].length+1}`+(selected?` · выделено ${selected}`:'');
+function docxRun(r){const p=(r.b?'<w:b/>':'')+(r.i?'<w:i/>':'')+(r.u?'<w:u w:val="single"/>':'');return `<w:r>${p?'<w:rPr>'+p+'</w:rPr>':''}<w:t xml:space="preserve">${xml(r.text)}</w:t></w:r>`}
+function makeDocx(){
+  const paras=blockModel().map(b=>`<w:p><w:pPr><w:jc w:val="${b.align==='center'?'center':b.align==='right'?'right':b.align==='justify'?'both':'left'}"/></w:pPr>${b.runs.map(docxRun).join('')}</w:p>`).join('');
+  const documentXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paras}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>`;
+  const contentTypes=`<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
+  const rels=`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`;
+  const docRels=`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr></w:style></w:styles>`;
+  const now=new Date().toISOString(),core=`<?xml version="1.0" encoding="UTF-8"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xml(baseName())}</dc:title><dc:creator>G134Office Lite</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`;
+  const app=`<?xml version="1.0" encoding="UTF-8"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>G134Office Lite</Application></Properties>`;
+  return zipStore([{name:'[Content_Types].xml',data:contentTypes},{name:'_rels/.rels',data:rels},{name:'word/document.xml',data:documentXml},{name:'word/_rels/document.xml.rels',data:docRels},{name:'word/styles.xml',data:styles},{name:'docProps/core.xml',data:core},{name:'docProps/app.xml',data:app}])
 }
-function showDoc(){document.body.classList.remove('pdf');document.getElementById('modeDoc').classList.add('on');document.getElementById('modePdf').classList.remove('on');updateStatus();}
-function showPdf(){document.body.classList.add('pdf');document.getElementById('modePdf').classList.add('on');document.getElementById('modeDoc').classList.remove('on');status.textContent=pdfUrl?'PDF открыт просмотром браузера':'PDF не открыт';}
-function baseName(){return fileName.replace(/\.[^.]+$/,'')||'document';}
-function download(name,mime,data){
-  const blob=data instanceof Blob?data:new Blob([data],{type:mime});const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href);dirty=false;fileName=name;mark();saveDraft(true);
+function odtSpan(r){const style=r.b&&r.i&&r.u?'BIU':r.b&&r.i?'BI':r.b&&r.u?'BU':r.i&&r.u?'IU':r.b?'B':r.i?'I':r.u?'U':'';return style?`<text:span text:style-name="${style}">${xml(r.text)}</text:span>`:xml(r.text)}
+function makeOdt(){
+  const paras=blockModel().map(b=>`<text:p text:style-name="${b.align==='center'?'Center':b.align==='right'?'Right':b.align==='justify'?'Justify':'Standard'}">${b.runs.map(odtSpan).join('')}</text:p>`).join('');
+  const content=`<?xml version="1.0" encoding="UTF-8"?><office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" office:version="1.3"><office:automatic-styles><style:style style:name="B" style:family="text"><style:text-properties fo:font-weight="bold"/></style:style><style:style style:name="I" style:family="text"><style:text-properties fo:font-style="italic"/></style:style><style:style style:name="U" style:family="text"><style:text-properties style:text-underline-style="solid"/></style:style><style:style style:name="BI" style:family="text"><style:text-properties fo:font-weight="bold" fo:font-style="italic"/></style:style><style:style style:name="BU" style:family="text"><style:text-properties fo:font-weight="bold" style:text-underline-style="solid"/></style:style><style:style style:name="IU" style:family="text"><style:text-properties fo:font-style="italic" style:text-underline-style="solid"/></style:style><style:style style:name="BIU" style:family="text"><style:text-properties fo:font-weight="bold" fo:font-style="italic" style:text-underline-style="solid"/></style:style><style:style style:name="Center" style:family="paragraph"><style:paragraph-properties fo:text-align="center"/></style:style><style:style style:name="Right" style:family="paragraph"><style:paragraph-properties fo:text-align="end"/></style:style><style:style style:name="Justify" style:family="paragraph"><style:paragraph-properties fo:text-align="justify"/></style:style></office:automatic-styles><office:body><office:text>${paras}</office:text></office:body></office:document-content>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8"?><office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" office:version="1.3"><office:styles><style:default-style style:family="paragraph"><style:text-properties fo:font-family="Calibri" fo:font-size="12pt"/></style:default-style></office:styles></office:document-styles>`;
+  const meta=`<?xml version="1.0" encoding="UTF-8"?><office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" office:version="1.3"><office:meta><dc:title>${xml(baseName())}</dc:title><meta:generator>G134Office Lite</meta:generator></office:meta></office:document-meta>`;
+  const manifest=`<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.3"><manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/><manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/><manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/></manifest:manifest>`;
+  return zipStore([{name:'mimetype',data:'application/vnd.oasis.opendocument.text'},{name:'content.xml',data:content},{name:'styles.xml',data:styles},{name:'meta.xml',data:meta},{name:'META-INF/manifest.xml',data:manifest}])
 }
-function wordHtml(){return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"></head><body>'+page.innerHTML+'</body></html>';}
-function markdown(){return(page.innerText||'').replace(/\u00a0/g,' ');}
-
-function detectDeviceLayout(){
-  const w=Math.min(window.innerWidth||9999,screen.width||9999);
-  const h=Math.min(window.innerHeight||9999,screen.height||9999);
-  const coarse=matchMedia('(pointer: coarse)').matches;
-  const touch=(navigator.maxTouchPoints||0)>0;
-  const short=Math.min(w,h), long=Math.max(w,h);
-  if((coarse||touch)&&short<=600)return'phone';
-  if((coarse||touch)&&short<=1000&&long<=1400)return'tablet';
-  if(window.innerWidth<=620)return'phone';
-  if(window.innerWidth<=1024)return'tablet';
-  return'desktop';
+function makeRtf(){
+  const text=page.innerText||'';let out='{\\rtf1\\ansi\\ansicpg1252\\deff0{\\fonttbl{\\f0 Calibri;}}\\viewkind4\\uc1\\pard\\f0\\fs24 ';
+  for(let i=0;i<text.length;i++){const c=text.charCodeAt(i),ch=text[i];if(ch==='\\')out+='\\\\';else if(ch==='{')out+='\\{';else if(ch==='}')out+='\\}';else if(ch==='\n')out+='\\par\n';else if(c>=32&&c<127)out+=ch;else{const signed=c>32767?c-65536:c;out+='\\u'+signed+'?'}}
+  return out+'}'
 }
-function layoutTitle(mode){return mode==='phone'?'телефон':mode==='tablet'?'планшет':'компьютер';}
-function applyLayout(mode, persist=true){
-  detectedLayout=detectDeviceLayout();
-  layoutMode=mode==='auto'?'auto':mode;
-  const actual=layoutMode==='auto'?detectedLayout:layoutMode;
-  document.body.dataset.layout=actual;
-  autoLayout.checked=layoutMode==='auto';
-  layoutButtons.forEach(btn=>btn.classList.toggle('on',layoutMode!=='auto'&&btn.dataset.layoutMode===actual));
-  deviceState.textContent=`Устройство: ${layoutTitle(detectedLayout)} · ${layoutMode==='auto'?'авто':'вручную: '+layoutTitle(actual)}`;
-  layoutFooter.textContent=`Вид: ${layoutMode==='auto'?'авто → ':''}${layoutTitle(actual)}`;
-  if(persist)savePrefs();
+function makePrintDocument(){
+  const styles=`body{font-family:Calibri,Arial,sans-serif;color:#000;background:#fff;margin:0}main{width:170mm;margin:0 auto;padding:18mm 20mm;font-size:12pt;line-height:1.5}p,div{margin:0 0 8pt}@page{size:A4;margin:0}`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${xml(baseName())}</title><style>${styles}</style></head><body><main>${page.innerHTML}</main><script>onload=()=>setTimeout(()=>print(),150)<\/script></body></html>`
 }
-function setManualLayout(mode){autoLayout.checked=false;applyLayout(mode);}
-function reevaluateLayout(){if(layoutMode==='auto')applyLayout('auto',false);}
-
-function savePrefs(){
-  localStorage.setItem(PREF_KEY,JSON.stringify({theme:themeSelect.value,zoom,wrap,layoutMode}));
-}
-function saveDraft(immediate=false){
-  clearTimeout(saveTimer);const run=()=>{localStorage.setItem(DRAFT_KEY,JSON.stringify({html:page.innerHTML,fileName,ts:Date.now()}));autosaveEl.textContent='Сохранено локально · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});};
-  if(immediate)run();else saveTimer=setTimeout(run,700);
-}
-function restoreDraft(){try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');if(d&&d.html){page.innerHTML=d.html;fileName=d.fileName||'авточерновик';dirty=false;}}catch{}}
-function applyTheme(value){
-  let actual=value;if(value==='system')actual=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
-  document.body.dataset.theme=actual;document.getElementById('themeMeta').content=actual==='dark'?'#22252b':actual==='sepia'?'#f4ecdc':'#f7f8fa';savePrefs();
-}
-function applyZoom(value){zoom=Math.min(160,Math.max(60,value));sheet.style.transform=`scale(${zoom/100})`;sheet.style.marginBottom=`${Math.max(0,(zoom-100)*8)}px`;zoomReset.textContent=zoom+'%';savePrefs();}
-function applyWrap(value){wrap=value;page.classList.toggle('no-wrap',!wrap);wrapBtn.classList.toggle('on',wrap);savePrefs();}
-function loadPrefs(){
+async function exportFormat(kind){
+  menu.classList.remove('open');showDoc();
   try{
-    const p=JSON.parse(localStorage.getItem(PREF_KEY)||'{}');themeSelect.value=p.theme||'system';zoom=Number(p.zoom)||100;wrap=p.wrap!==false;layoutMode=p.layoutMode||'auto';
-    applyTheme(themeSelect.value);applyZoom(zoom);applyWrap(wrap);applyLayout(layoutMode,false);
-  }catch{themeSelect.value='system';applyTheme('system');applyLayout('auto',false);}
+    if(kind==='txt')saveBlob(baseName()+'.txt','text/plain;charset=utf-8',page.innerText||'');
+    else if(kind==='rtf')saveBlob(baseName()+'.rtf','application/rtf;charset=utf-8',makeRtf());
+    else if(kind==='docx')saveBlob(baseName()+'.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document',makeDocx());
+    else if(kind==='odt')saveBlob(baseName()+'.odt','application/vnd.oasis.opendocument.text',makeOdt());
+    else if(kind==='pdf'){const w=window.open('','_blank');if(!w){alert('Разрешите всплывающее окно для сохранения PDF.');return}w.document.open();w.document.write(makePrintDocument());w.document.close()}
+    else if(kind==='share'){const file=new File([page.innerText||''],baseName()+'.txt',{type:'text/plain'});if(navigator.share)await navigator.share({title:fileName,files:[file]}).catch(()=>navigator.share({title:fileName,text:page.innerText||''}));else alert('На этом устройстве нет функции «Поделиться».')}
+  }catch(e){console.error(e);alert('Не удалось сохранить файл: '+(e?.message||e))}
 }
-function openPdf(file){if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl=URL.createObjectURL(file);pdf.src=pdfUrl;fileName=file.name;dirty=false;mark();showPdf();}
-async function openAny(file){if(!file)return;if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){openPdf(file);return;}const text=await file.text();if(/\.(html|htm|doc)$/i.test(file.name))page.innerHTML=text;else page.innerText=text;fileName=file.name;dirty=false;mark();showDoc();saveDraft(true);}
-async function initWasm(){try{if(typeof G134LiteCore!=='function')throw new Error('loader missing');wasm=await G134LiteCore();engineEl.textContent='C++ WASM: активен';updateStatus();}catch(e){engineEl.textContent='C++ WASM: JS fallback';console.warn('G134Office Lite WASM fallback:',e);}}
-
-page.addEventListener('input',()=>{dirty=true;mark();updateStatus();updateCursor();saveDraft();});
-page.addEventListener('keyup',updateCursor);page.addEventListener('mouseup',updateCursor);
-document.querySelectorAll('[data-cmd]').forEach(btn=>btn.onclick=()=>{page.focus();document.execCommand(btn.dataset.cmd);dirty=true;mark();updateStatus();saveDraft();});
-document.getElementById('font').onchange=e=>{page.focus();document.execCommand('fontName',false,e.target.value);saveDraft();};
-document.getElementById('size').onchange=e=>{page.focus();document.execCommand('fontSize',false,'4');page.querySelectorAll('font[size="4"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=e.target.value+'px';});saveDraft();};
-document.getElementById('undo').onclick=()=>document.execCommand('undo');
-document.getElementById('modeDoc').onclick=showDoc;document.getElementById('modePdf').onclick=showPdf;
+function detectDeviceLayout(){const w=Math.min(innerWidth||9999,screen.width||9999),h=Math.min(innerHeight||9999,screen.height||9999),coarse=matchMedia('(pointer: coarse)').matches,touch=(navigator.maxTouchPoints||0)>0,short=Math.min(w,h),long=Math.max(w,h);if((coarse||touch)&&short<=600)return'phone';if((coarse||touch)&&short<=1000&&long<=1400)return'tablet';if(innerWidth<=620)return'phone';if(innerWidth<=1024)return'tablet';return'desktop'}
+function layoutTitle(m){return m==='phone'?'телефон':m==='tablet'?'планшет':'компьютер'}
+function applyLayout(mode,persist=true){detectedLayout=detectDeviceLayout();layoutMode=mode==='auto'?'auto':mode;const actual=layoutMode==='auto'?detectedLayout:layoutMode;document.body.dataset.layout=actual;autoLayout.checked=layoutMode==='auto';layoutButtons.forEach(b=>b.classList.toggle('on',layoutMode!=='auto'&&b.dataset.layoutMode===actual));deviceState.textContent=`Устройство: ${layoutTitle(detectedLayout)} · ${layoutMode==='auto'?'авто':'вручную: '+layoutTitle(actual)}`;layoutFooter.textContent=`Вид: ${layoutMode==='auto'?'авто → ':''}${layoutTitle(actual)}`;if(persist)savePrefs()}
+function savePrefs(){localStorage.setItem(PREF_KEY,JSON.stringify({theme:themeSelect.value,zoom,wrap,layoutMode}))}
+function saveDraft(now=false){clearTimeout(saveTimer);const run=()=>{localStorage.setItem(DRAFT_KEY,JSON.stringify({html:page.innerHTML,fileName,ts:Date.now()}));autosaveEl.textContent='Сохранено локально · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};now?run():saveTimer=setTimeout(run,700)}
+function restoreDraft(){try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');if(d&&d.html){page.innerHTML=d.html;fileName=d.fileName||'авточерновик';dirty=false}}catch{}}
+function applyTheme(v){let a=v;if(v==='system')a=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.body.dataset.theme=a;document.getElementById('themeMeta').content=a==='dark'?'#22252b':a==='sepia'?'#f4ecdc':'#f7f8fa';savePrefs()}
+function applyZoom(v){zoom=Math.min(160,Math.max(60,v));sheet.style.transform=`scale(${zoom/100})`;sheet.style.marginBottom=`${Math.max(0,(zoom-100)*8)}px`;zoomReset.textContent=zoom+'%';savePrefs()}
+function applyWrap(v){wrap=v;page.classList.toggle('no-wrap',!wrap);wrapBtn.classList.toggle('on',wrap);savePrefs()}
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREF_KEY)||'{}');themeSelect.value=p.theme||'system';zoom=Number(p.zoom)||100;wrap=p.wrap!==false;layoutMode=p.layoutMode||'auto';applyTheme(themeSelect.value);applyZoom(zoom);applyWrap(wrap);applyLayout(layoutMode,false)}catch{themeSelect.value='system';applyTheme('system');applyLayout('auto',false)}}
+function openPdf(file){if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl=URL.createObjectURL(file);pdf.src=pdfUrl;fileName=file.name;dirty=false;mark();showPdf()}
+async function openAny(file){if(!file)return;if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){openPdf(file);return}const text=await file.text();if(/\.(html|htm)$/i.test(file.name))page.innerHTML=text;else page.innerText=text;fileName=file.name;dirty=false;mark();showDoc();saveDraft(true)}
+async function initWasm(){try{if(typeof G134LiteCore!=='function')throw new Error('loader missing');wasm=await G134LiteCore();engineEl.textContent='C++ WASM: активен';updateStatus()}catch(e){engineEl.textContent='C++ WASM: JS fallback';console.warn(e)}}
+page.addEventListener('input',()=>{dirty=true;mark();updateStatus();updateCursor();saveDraft()});page.addEventListener('keyup',updateCursor);page.addEventListener('mouseup',updateCursor);
+document.querySelectorAll('[data-cmd]').forEach(btn=>btn.onclick=()=>{page.focus();document.execCommand(btn.dataset.cmd);dirty=true;mark();updateStatus();saveDraft()});
+document.getElementById('font').onchange=e=>{page.focus();document.execCommand('fontName',false,e.target.value);saveDraft()};
+document.getElementById('size').onchange=e=>{page.focus();document.execCommand('fontSize',false,'4');page.querySelectorAll('font[size="4"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=e.target.value+'px'});saveDraft()};
+document.getElementById('undo').onclick=()=>document.execCommand('undo');document.getElementById('modeDoc').onclick=showDoc;document.getElementById('modePdf').onclick=showPdf;
 document.getElementById('open').onclick=()=>document.getElementById('file').click();document.getElementById('file').onchange=e=>openAny(e.target.files[0]);
-document.getElementById('saveBtn').onclick=()=>menu.classList.add('open');document.getElementById('closeMenu').onclick=()=>menu.classList.remove('open');menu.onclick=e=>{if(e.target===menu)menu.classList.remove('open');};
-themeSelect.onchange=e=>applyTheme(e.target.value);matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(themeSelect.value==='system')applyTheme('system');});
+document.getElementById('saveBtn').onclick=()=>menu.classList.add('open');document.getElementById('closeMenu').onclick=()=>menu.classList.remove('open');menu.onclick=e=>{if(e.target===menu)menu.classList.remove('open')};
+themeSelect.onchange=e=>applyTheme(e.target.value);matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(themeSelect.value==='system')applyTheme('system')});
 wrapBtn.onclick=()=>applyWrap(!wrap);document.getElementById('zoomOut').onclick=()=>applyZoom(zoom-10);document.getElementById('zoomIn').onclick=()=>applyZoom(zoom+10);zoomReset.onclick=()=>applyZoom(100);
-document.getElementById('focusBtn').onclick=()=>{document.body.classList.toggle('focus');document.getElementById('focusBtn').classList.toggle('on');};
-document.getElementById('fullBtn').onclick=async()=>{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.();else await document.exitFullscreen?.();};
-
-autoLayout.addEventListener('change',()=>{if(autoLayout.checked)applyLayout('auto');else applyLayout(detectedLayout);});
-layoutButtons.forEach(btn=>btn.addEventListener('click',()=>setManualLayout(btn.dataset.layoutMode)));
-window.addEventListener('resize',()=>{clearTimeout(window.__g134Resize);window.__g134Resize=setTimeout(reevaluateLayout,120);});
-window.addEventListener('orientationchange',()=>setTimeout(reevaluateLayout,180));
-
- document.querySelectorAll('[data-save]').forEach(btn=>btn.onclick=async()=>{
-  const kind=btn.dataset.save;menu.classList.remove('open');
-  if(kind==='txt')download(baseName()+'.txt','text/plain;charset=utf-8',page.innerText||'');
-  if(kind==='html')download(baseName()+'.html','text/html;charset=utf-8',page.innerHTML);
-  if(kind==='doc')download(baseName()+'.doc','application/msword',wordHtml());
-  if(kind==='md')download(baseName()+'.md','text/markdown;charset=utf-8',markdown());
-  if(kind==='pdf'){showDoc();setTimeout(()=>window.print(),50);}
-  if(kind==='share'){const file=new File([page.innerText||''],baseName()+'.txt',{type:'text/plain'});if(navigator.share)await navigator.share({title:fileName,files:[file]}).catch(()=>navigator.share({title:fileName,text:page.innerText||''}));else autosaveEl.textContent='На этом устройстве нет функции «Поделиться»';}
-});
-document.getElementById('new').onclick=()=>{menu.classList.remove('open');if(dirty&&!confirm('Сбросить изменения?'))return;page.innerHTML='';fileName='без имени';dirty=false;mark();showDoc();saveDraft(true);};
-document.getElementById('find').onclick=()=>{const q=document.getElementById('q').value;if(q)window.find(q);};
-window.addEventListener('keydown',e=>{if(!e.ctrlKey)return;const k=e.key.toLowerCase();if(k==='s'){e.preventDefault();menu.classList.add('open');}if(k==='o'){e.preventDefault();document.getElementById('file').click();}if(k==='n'){e.preventDefault();document.getElementById('new').click();}if(k==='f'){e.preventDefault();document.getElementById('q').focus();}if(k==='0'){e.preventDefault();applyZoom(100);}if(k==='+'||k==='='){e.preventDefault();applyZoom(zoom+10);}if(k==='-'){e.preventDefault();applyZoom(zoom-10);}});
-window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>{e.preventDefault();openAny(e.dataTransfer.files[0]);});window.addEventListener('beforeunload',e=>{if(dirty){saveDraft(true);e.preventDefault();}});
-
+document.getElementById('focusBtn').onclick=()=>{document.body.classList.toggle('focus');document.getElementById('focusBtn').classList.toggle('on')};document.getElementById('fullBtn').onclick=async()=>{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.();else await document.exitFullscreen?.()};
+autoLayout.addEventListener('change',()=>applyLayout(autoLayout.checked?'auto':detectedLayout));layoutButtons.forEach(btn=>btn.addEventListener('click',()=>applyLayout(btn.dataset.layoutMode)));
+addEventListener('resize',()=>{clearTimeout(window.__g134Resize);window.__g134Resize=setTimeout(()=>{if(layoutMode==='auto')applyLayout('auto',false)},120)});addEventListener('orientationchange',()=>setTimeout(()=>{if(layoutMode==='auto')applyLayout('auto',false)},180));
+document.querySelectorAll('[data-save]').forEach(btn=>btn.onclick=()=>exportFormat(btn.dataset.save));
+document.getElementById('new').onclick=()=>{menu.classList.remove('open');if(dirty&&!confirm('Сбросить изменения?'))return;page.innerHTML='';fileName='без имени';dirty=false;mark();showDoc();saveDraft(true)};
+document.getElementById('find').onclick=()=>{const q=document.getElementById('q').value;if(q)window.find(q)};
+addEventListener('keydown',e=>{if(!e.ctrlKey)return;const k=e.key.toLowerCase();if(k==='s'){e.preventDefault();menu.classList.add('open')}if(k==='o'){e.preventDefault();document.getElementById('file').click()}if(k==='n'){e.preventDefault();document.getElementById('new').click()}if(k==='f'){e.preventDefault();document.getElementById('q').focus()}if(k==='0'){e.preventDefault();applyZoom(100)}if(k==='+'||k==='='){e.preventDefault();applyZoom(zoom+10)}if(k==='-'){e.preventDefault();applyZoom(zoom-10)}});
+addEventListener('dragover',e=>e.preventDefault());addEventListener('drop',e=>{e.preventDefault();openAny(e.dataTransfer.files[0])});addEventListener('beforeunload',e=>{if(dirty){saveDraft(true);e.preventDefault()}});
 restoreDraft();loadPrefs();mark();showDoc();updateCursor();initWasm();
 </script>
 </body>
