@@ -5,85 +5,113 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>G134Office Lite</title>
 <style>
-  :root { --desk:#d7dbe2; --ink:#1c1c1c; --bar:#f4f5f7; --line:#c8ced6; }
+  :root { --desk:#c5ccd6; --bar:#f7f8fa; --line:#d5dbe3; --ink:#1a1a1a; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body { display: flex; flex-direction: column; background: var(--desk); color: var(--ink); font-family: "Segoe UI", sans-serif; }
-  header { display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: var(--bar); border-bottom: 1px solid var(--line); }
-  button, input { font: inherit; }
-  button { background: #fff; border: 1px solid #b7bec7; border-radius: 4px; padding: 6px 12px; cursor: pointer; }
-  button:hover { background: #eef3f8; }
-  #q { width: 180px; padding: 6px 8px; border: 1px solid #b7bec7; border-radius: 4px; }
-  #name { margin-left: auto; color: #4d5660; }
-  main { flex: 1; overflow: auto; padding: 28px 16px 40px; }
-  .sheet { width: min(820px, 100%); min-height: 980px; margin: 0 auto; background: #fff; box-shadow: 0 8px 28px rgba(0,0,0,.18); }
-  textarea { width: 100%; min-height: 980px; border: 0; resize: none; padding: 64px 72px; font: 16px/1.45 Consolas, "Segoe UI", sans-serif; color: var(--ink); background: transparent; outline: none; }
-  textarea.nowrap { white-space: pre; }
-  footer { padding: 6px 12px; background: var(--bar); border-top: 1px solid var(--line); color: #4d5660; font-size: 13px; }
+  header { background: var(--bar); border-bottom: 1px solid var(--line); }
+  .row { display: flex; gap: 6px; align-items: center; padding: 6px 10px; flex-wrap: wrap; }
+  button, select, input { font: 13px "Segoe UI", sans-serif; }
+  button, select { background: #fff; border: 1px solid #c5ccd6; border-radius: 4px; padding: 5px 9px; cursor: pointer; }
+  button:hover, select:hover { background: #eef3f8; }
+  button.active { background: #d9e7f7; border-color: #8eb0d4; }
+  #q { width: 160px; padding: 5px 8px; border: 1px solid #c5ccd6; border-radius: 4px; }
+  #name { margin-left: auto; color: #52606d; }
+  main { flex: 1; overflow: auto; padding: 28px 12px 48px; }
+  .sheet { width: 794px; min-height: 1123px; margin: 0 auto; background: #fff; box-shadow: 0 10px 30px rgba(20,30,40,.22); }
+  #page { min-height: 1123px; padding: 72px 76px; outline: none; font: 16px/1.45 Calibri, "Segoe UI", sans-serif; }
+  #page:empty:before { content: "Начните писать"; color: #9aa3ad; }
+  footer { padding: 6px 12px; background: var(--bar); border-top: 1px solid var(--line); color: #52606d; font-size: 13px; }
+  @media print {
+    header, footer, main { background: #fff; }
+    header, footer { display: none; }
+    main { padding: 0; overflow: visible; }
+    .sheet { box-shadow: none; width: auto; }
+  }
 </style>
 </head>
 <body>
 <header>
-  <button id="new" type="button">Создать</button>
-  <button id="open" type="button">Открыть</button>
-  <button id="save" type="button">Сохранить</button>
-  <input id="q" placeholder="Найти">
-  <button id="find" type="button">Найти</button>
-  <button id="wrap" type="button">Перенос</button>
-  <button id="plus" type="button">A+</button>
-  <button id="minus" type="button">A−</button>
-  <span id="name">без имени</span>
+  <div class="row">
+    <button id="new" type="button">Создать</button>
+    <button id="open" type="button">Открыть</button>
+    <button id="save" type="button">Сохранить</button>
+    <button id="print" type="button">Печать</button>
+    <span id="name">без имени</span>
+  </div>
+  <div class="row">
+    <select id="font">
+      <option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option>
+    </select>
+    <select id="size">
+      <option>12</option><option>14</option><option selected>16</option><option>18</option><option>22</option><option>28</option>
+    </select>
+    <button data-cmd="bold" type="button"><b>B</b></button>
+    <button data-cmd="italic" type="button"><i>I</i></button>
+    <button data-cmd="underline" type="button"><u>U</u></button>
+    <button data-cmd="justifyLeft" type="button">Лево</button>
+    <button data-cmd="justifyCenter" type="button">Центр</button>
+    <button data-cmd="justifyRight" type="button">Право</button>
+    <button data-cmd="insertUnorderedList" type="button">Список</button>
+    <button id="undo" type="button">Отменить</button>
+    <button id="redo" type="button">Вернуть</button>
+    <input id="q" placeholder="Найти">
+    <button id="find" type="button">Найти</button>
+  </div>
 </header>
-<main>
-  <div class="sheet"><textarea id="editor" spellcheck="false" placeholder="Начните писать"></textarea></div>
-</main>
-<footer id="status">Строка 1, столбец 1 · UTF-8 · 16 px</footer>
-<input id="file" type="file" accept=".txt,text/plain" hidden>
+<main><div class="sheet"><div id="page" contenteditable="true"></div></div></main>
+<footer id="status">Строка 1 · слов 0 · A4</footer>
+<input id="file" type="file" accept=".txt,.html,text/plain,text/html" hidden>
 <script>
-const editor = document.getElementById('editor');
+const page = document.getElementById('page');
 const status = document.getElementById('status');
 const nameEl = document.getElementById('name');
-let fileName = 'без имени', dirty = false, size = 16, findFrom = 0;
+let fileName = 'без имени', dirty = false;
 function mark() {
   document.title = 'G134Office Lite — ' + fileName + (dirty ? ' *' : '');
   nameEl.textContent = fileName + (dirty ? ' *' : '');
 }
 function place() {
-  const pos = editor.selectionStart;
-  const upto = editor.value.slice(0, pos);
-  const line = upto.split('\n').length;
-  const col = upto.length - upto.lastIndexOf('\n');
-  status.textContent = 'Строка ' + line + ', столбец ' + col + ' · UTF-8 · ' + size + ' px';
+  const text = page.innerText || '';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  status.textContent = 'Строк ' + text.split('\n').length + ' · слов ' + words + ' · знаков ' + text.length + ' · A4';
 }
-editor.addEventListener('input', () => { dirty = true; mark(); place(); });
-editor.addEventListener('keyup', place);
-editor.addEventListener('click', place);
+page.addEventListener('input', () => { dirty = true; mark(); place(); });
+page.addEventListener('keyup', place);
+page.addEventListener('click', place);
+document.querySelectorAll('[data-cmd]').forEach(btn => btn.onclick = () => {
+  page.focus();
+  document.execCommand(btn.dataset.cmd, false, null);
+  dirty = true; mark();
+});
+document.getElementById('font').onchange = (e) => { page.focus(); document.execCommand('fontName', false, e.target.value); dirty = true; mark(); };
+document.getElementById('size').onchange = (e) => { page.focus(); document.execCommand('fontSize', false, '4'); page.querySelectorAll('font[size="4"]').forEach(n => { n.removeAttribute('size'); n.style.fontSize = e.target.value + 'px'; }); dirty = true; mark(); };
+document.getElementById('undo').onclick = () => document.execCommand('undo');
+document.getElementById('redo').onclick = () => document.execCommand('redo');
 document.getElementById('new').onclick = () => {
   if (dirty && !confirm('Сбросить изменения?')) return;
-  editor.value = ''; fileName = 'без имени'; dirty = false; mark(); place();
+  page.innerHTML = ''; fileName = 'без имени'; dirty = false; mark(); place();
 };
 document.getElementById('open').onclick = () => document.getElementById('file').click();
 document.getElementById('file').onchange = async (e) => {
   const file = e.target.files[0]; if (!file) return;
-  editor.value = await file.text(); fileName = file.name; dirty = false; mark(); place();
+  const text = await file.text();
+  if (file.name.endsWith('.html')) page.innerHTML = text; else page.innerText = text;
+  fileName = file.name; dirty = false; mark(); place();
 };
 document.getElementById('save').onclick = () => {
-  const blob = new Blob([editor.value], {type: 'text/plain;charset=utf-8'});
+  const blob = new Blob([page.innerHTML], {type: 'text/html;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = fileName.endsWith('.txt') ? fileName : 'document.txt';
+  a.download = fileName.endsWith('.html') ? fileName : 'document.html';
   a.click(); URL.revokeObjectURL(a.href); dirty = false; mark();
 };
+document.getElementById('print').onclick = () => window.print();
 document.getElementById('find').onclick = () => {
-  const q = document.getElementById('q').value; if (!q) return;
-  let at = editor.value.indexOf(q, findFrom);
-  if (at < 0) at = editor.value.indexOf(q);
-  if (at < 0) { status.textContent = 'Не найдено'; return; }
-  editor.focus(); editor.setSelectionRange(at, at + q.length); findFrom = at + q.length; place();
+  const q = document.getElementById('q').value;
+  if (!q) return;
+  window.find(q);
 };
-document.getElementById('wrap').onclick = () => editor.classList.toggle('nowrap');
-document.getElementById('plus').onclick = () => { size = Math.min(32, size + 2); editor.style.fontSize = size + 'px'; place(); };
-document.getElementById('minus').onclick = () => { size = Math.max(12, size - 2); editor.style.fontSize = size + 'px'; place(); };
 window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
 mark(); place();
 </script>
