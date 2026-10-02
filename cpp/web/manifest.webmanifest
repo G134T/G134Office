@@ -1,0 +1,14 @@
+{
+  "name": "G134Office Lite",
+  "short_name": "G134Office",
+  "description": "Лёгкий редактор документов G134Office с C++ WebAssembly.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e7ebf0",
+  "theme_color": "#f7f8fa",
+  "icons": [
+    {"src":"app-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
