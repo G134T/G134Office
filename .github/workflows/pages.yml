@@ -24,9 +24,42 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/upload-pages-artifact@v3
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Emscripten
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emscripten
+          em++ --version
+
+      - name: Build C++ WebAssembly core
+        shell: bash
+        run: |
+          em++ cpp/web/wasm/lite_core.cpp \
+            -std=c++20 \
+            -O3 \
+            -sWASM=1 \
+            -sMODULARIZE=1 \
+            -sEXPORT_NAME=G134LiteCore \
+            -sALLOW_MEMORY_GROWTH=1 \
+            -sEXPORTED_FUNCTIONS='["_g134_word_count","_g134_char_count","_g134_line_count","_g134_reading_seconds","_g134_nonspace_char_count","_g134_is_empty"]' \
+            -sEXPORTED_RUNTIME_METHODS='["ccall"]' \
+            -o cpp/web/g134lite.js
+
+      - name: Verify web bundle
+        shell: bash
+        run: |
+          test -s cpp/web/index.html
+          test -s cpp/web/g134lite.js
+          test -s cpp/web/g134lite.wasm
+          ls -lh cpp/web/g134lite.js cpp/web/g134lite.wasm
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: cpp/web
-      - id: deployment
+
+      - name: Deploy Pages
+        id: deployment
         uses: actions/deploy-pages@v4
