@@ -29,6 +29,7 @@ class PdfTextIndex {
         if (document.numberOfPages == 0) return
         val collector = object : PDFTextStripper() {
             override fun writeString(text: String, textPositions: MutableList<TextPosition>) {
+                super.writeString(text, textPositions)
                 val page = currentPageNo - 1
                 for (tp in textPositions) {
                     val u = tp.unicode ?: continue

@@ -44,7 +44,7 @@ object SymbolDialog {
         stage.title = when (chrome) {
             UiChrome.OPEN_OFFICE -> "Специальный символ"
             UiChrome.MY_OFFICE -> "Вставка символа"
-            UiChrome.STANDARD -> "Символ"
+            UiChrome.WORD, UiChrome.STANDARD -> "Символ"
         }
         stage.initModality(Modality.WINDOW_MODAL)
         if (owner != null) stage.initOwner(owner)
@@ -133,7 +133,7 @@ object SymbolDialog {
             Label(when (chrome) {
                 UiChrome.OPEN_OFFICE -> "Подмножество:"
                 UiChrome.MY_OFFICE -> "Набор символов:"
-                UiChrome.STANDARD -> "Набор:"
+                UiChrome.WORD, UiChrome.STANDARD -> "Набор:"
             }), setBox
         ).apply {
             alignment = Pos.CENTER_LEFT

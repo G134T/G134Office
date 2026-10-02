@@ -4,7 +4,12 @@ import javafx.scene.Scene
 import java.io.File
 import kotlin.math.min
 
-enum class AppTheme(val title: String, val compactRibbon: Boolean = false, val wordYear: String? = null) {
+enum class AppTheme(
+    val title: String,
+    val compactRibbon: Boolean = false,
+    val wordYear: String? = null,
+    val officeYear: String? = null
+) {
     LIGHT("Светлая"),
     GRAY("Серая"),
     DARK("Тёмная AMOLED"),
@@ -16,10 +21,19 @@ enum class AppTheme(val title: String, val compactRibbon: Boolean = false, val w
     WORD_2019("Microsoft Word 2019", wordYear = "2019"),
     WORD_2023("Microsoft Word 2023", wordYear = "2023"),
     WORD_2026("Microsoft Word 2026", wordYear = "2026"),
-    OPEN_OFFICE("OpenOffice"),
+    OO_2002("OpenOffice 2002", officeYear = "2002"),
+    OPEN_OFFICE("OpenOffice 2005", officeYear = "2005"),
+    OO_2008("OpenOffice 2008", officeYear = "2008"),
+    OO_2013("OpenOffice 2013", officeYear = "2013"),
+    OO_2014("OpenOffice 2014", officeYear = "2014"),
+    OO_2023("OpenOffice 2023", officeYear = "2023"),
     MYOFFICE("МойОфис");
 
     val family: ThemeFamily get() = ThemeFamily.of(this)
+
+    /** Светлая, Серая, Тёмная AMOLED и Стеклянная — палитры, их можно надеть на любую раскладку. */
+    val isPalette: Boolean
+        get() = this == LIGHT || this == GRAY || this == DARK || this == GLASS
 }
 
 enum class ThemeFamily(val title: String) {
@@ -42,7 +56,10 @@ enum class ThemeFamily(val title: String) {
             AppTheme.WORD_2019, AppTheme.WORD_2023, AppTheme.WORD_2026
         )
         NOTEPAD -> listOf(AppTheme.NOTEPAD_WIN11)
-        OPEN_OFFICE -> listOf(AppTheme.OPEN_OFFICE)
+        OPEN_OFFICE -> listOf(
+            AppTheme.OO_2002, AppTheme.OPEN_OFFICE, AppTheme.OO_2008,
+            AppTheme.OO_2013, AppTheme.OO_2014, AppTheme.OO_2023
+        )
         MYOFFICE -> listOf(AppTheme.MYOFFICE)
     }
 
@@ -52,13 +69,47 @@ enum class ThemeFamily(val title: String) {
 }
 
 enum class UiChrome {
-    STANDARD, OPEN_OFFICE, MY_OFFICE;
+    /** Одна полная лента годовых оформлений Word. */
+    STANDARD,
+    /** Классика OpenOffice: меню и две компактные панели. */
+    OPEN_OFFICE,
+    /** Компактный МойОфис: одна панель и инспектор справа. */
+    MY_OFFICE,
+    /** Лента Word: вкладки Главная, Вставка, Разметка, Рецензирование, Вид. */
+    WORD;
+
+    val title: String
+        get() = when (this) {
+            WORD, STANDARD -> "Лента — Word"
+            OPEN_OFFICE -> "Классический — OpenOffice"
+            MY_OFFICE -> "Компактный — МойОфис"
+        }
 
     companion object {
-        fun of(theme: AppTheme) = when (theme) {
-            AppTheme.OPEN_OFFICE -> OPEN_OFFICE
-            AppTheme.MYOFFICE -> MY_OFFICE
+        val layouts = listOf(WORD, OPEN_OFFICE, MY_OFFICE)
+
+        fun fromPref(name: String?) = layouts.firstOrNull { it.name == name }
+
+        fun defaultLayout(theme: AppTheme?) = when {
+            theme?.officeYear != null -> OPEN_OFFICE
+            theme == AppTheme.MYOFFICE -> MY_OFFICE
+            else -> WORD
+        }
+
+        fun of(theme: AppTheme) = when {
+            theme.officeYear != null -> OPEN_OFFICE
+            theme == AppTheme.MYOFFICE -> MY_OFFICE
+            theme == AppTheme.LIGHT || theme == AppTheme.GRAY ||
+                theme == AppTheme.DARK || theme == AppTheme.GLASS -> WORD
             else -> STANDARD
+        }
+
+        /** Палитры слушаются выбранной раскладки. Фирменные темы оставляют свой вид. */
+        fun resolve(theme: AppTheme, layout: UiChrome) = when {
+            theme.officeYear != null -> OPEN_OFFICE
+            theme == AppTheme.MYOFFICE -> MY_OFFICE
+            theme.isPalette -> if (layout == OPEN_OFFICE || layout == MY_OFFICE) layout else WORD
+            else -> of(theme)
         }
     }
 }
@@ -98,6 +149,41 @@ object Theme {
         val onAccent: String
     )
 
+    fun dialogStylesheet(pack: Pack): String {
+        val ink = ink(pack)
+        val css = """
+            .root, .dialog-pane { -fx-background-color: ${pack.popupBg}; }
+            .label, .check-box, .radio-button { -fx-text-fill: ${pack.popupFg}; -fx-font-size: 13px; }
+            .text-field {
+                -fx-background-color: ${pack.editorBg};
+                -fx-text-fill: ${pack.editorFg};
+                -fx-prompt-text-fill: ${ink.hintFg};
+                -fx-border-color: ${pack.border};
+                -fx-background-radius: 6;
+                -fx-border-radius: 6;
+                -fx-padding: 6 8 6 8;
+            }
+            .button {
+                -fx-background-color: ${pack.popupBg};
+                -fx-text-fill: ${pack.popupFg};
+                -fx-border-color: ${pack.border};
+                -fx-background-radius: 6;
+                -fx-border-radius: 6;
+                -fx-padding: 6 12 6 12;
+            }
+            .button:hover { -fx-background-color: ${ink.itemHoverBg}; -fx-text-fill: ${ink.itemHoverFg}; }
+            .button:default {
+                -fx-background-color: ${pack.accent};
+                -fx-text-fill: ${pack.onAccent};
+                -fx-border-color: transparent;
+            }
+            .dialog-pane > .header-panel { -fx-background-color: ${pack.menuBg}; }
+            .dialog-pane > .header-panel .label { -fx-text-fill: ${pack.menuFg}; }
+            .combo-box, .combo-box .list-cell { -fx-background-color: ${pack.editorBg}; -fx-text-fill: ${pack.popupFg}; }
+        """.trimIndent()
+        return "data:text/css," + css.replace("\n", " ").replace("#", "%23")
+    }
+
     fun ink(pack: Pack) = Ink(
         menuHoverBg = pack.menuHoverBg.ifBlank { pack.buttonHover },
         menuHoverFg = pack.menuHoverFg.ifBlank { pack.menuFg },
@@ -107,42 +193,42 @@ object Theme {
         onAccent = pack.onAccent
     )
 
-    fun pack(theme: AppTheme) = when (theme) {
+    fun pack(theme: AppTheme) = if (theme.officeYear != null) OpenOfficeTheme.pack(theme) else when (theme) {
         AppTheme.LIGHT -> skin(
-            windowBg = "#e7eef6", ribbonBg = "#f4f7fb", menuBg = "#f8fafc", menuFg = "#1a2333",
-            popupBg = "#ffffff", popupFg = "#1a2333", editorBg = "#ffffff", editorFg = "#182235",
-            statusBg = "#eef3f8", statusFg = "#334155", border = "#c5d2e2",
-            buttonHover = "#e3edfb", buttonFg = "#1a2333", labelFg = "#4b5d73", accent = "#2563eb",
-            menuHoverBg = "#e3edfb", menuHoverFg = "#1a2333",
-            itemHoverBg = "#dbe7f8", itemHoverFg = "#1a2333", hintFg = "#5c6b80"
+            windowBg = "#d4d4d4", ribbonBg = "#ffffff", menuBg = "#ffffff", menuFg = "#1b1b1b",
+            popupBg = "#ffffff", popupFg = "#1b1b1b", editorBg = "#ffffff", editorFg = "#1b1b1b",
+            statusBg = "#f3f3f3", statusFg = "#333333", border = "#d0d0d0",
+            buttonHover = "#e6e6e6", buttonFg = "#1b1b1b", labelFg = "#4a4a4a", accent = "#0f6cbd",
+            menuHoverBg = "#f2f2f2", menuHoverFg = "#1b1b1b",
+            itemHoverBg = "#deecf9", itemHoverFg = "#1b1b1b", hintFg = "#5e5e5e",
+            menuRound = 2
         )
         AppTheme.GRAY -> skin(
-            windowBg = "#c5ccd4", ribbonBg = "#e6eaef", menuBg = "#e6eaef", menuFg = "#1c2630",
-            popupBg = "#f7f8fa", popupFg = "#1c2630", editorBg = "#ffffff", editorFg = "#1c2630",
-            statusBg = "#d5dbe3", statusFg = "#1c2630", border = "#a8b3c0",
-            buttonHover = "#d5dce6", buttonFg = "#1c2630", labelFg = "#2f3d4c", accent = "#3d5a73",
-            menuHoverBg = "#d5dce6", menuHoverFg = "#1c2630",
-            itemHoverBg = "#d3deea", itemHoverFg = "#1c2630", hintFg = "#4a5968"
+            windowBg = "#3a3a3a", ribbonBg = "#4a4a4a", menuBg = "#3f3f3f", menuFg = "#f2f2f2",
+            popupBg = "#454545", popupFg = "#f4f4f4", editorBg = "#ffffff", editorFg = "#1c1c1c",
+            statusBg = "#333333", statusFg = "#e8e8e8", border = "#2a2a2a",
+            buttonHover = "#5c5c5c", buttonFg = "#f5f5f5", labelFg = "#d2d2d2", accent = "#245a86",
+            menuHoverBg = "#555555", menuHoverFg = "#ffffff",
+            itemHoverBg = "#1f4d73", itemHoverFg = "#ffffff", hintFg = "#c8c8c8",
+            menuRound = 2
         )
         AppTheme.DARK -> skin(
-            windowBg = "#000000", ribbonBg = "#0c0e13", menuBg = "#0c0e13", menuFg = "#f5f7ff",
-            popupBg = "#141820", popupFg = "#f5f7ff", editorBg = "#0c0e13", editorFg = "#f5f7ff",
-            statusBg = "#0c0e13", statusFg = "#d5deee", border = "#2c3648",
-            buttonHover = "#1c2838", buttonFg = "#f5f7ff", labelFg = "#c5d0e2", accent = "#2563eb",
-            menuHoverBg = "#1c2838", menuHoverFg = "#ffffff",
-            itemHoverBg = "#1d4ed8", itemHoverFg = "#ffffff", hintFg = "#a8b6cc"
+            windowBg = "#000000", ribbonBg = "#0a0a0a", menuBg = "#000000", menuFg = "#f5f5f5",
+            popupBg = "#161616", popupFg = "#f5f5f5", editorBg = "#000000", editorFg = "#f5f5f5",
+            statusBg = "#000000", statusFg = "#dcdcdc", border = "#2a2a2a",
+            buttonHover = "#1c1c1c", buttonFg = "#f5f5f5", labelFg = "#c8c8c8", accent = "#2f6fde",
+            menuHoverBg = "#1a1a1a", menuHoverFg = "#ffffff",
+            itemHoverBg = "#1d4f91", itemHoverFg = "#ffffff", hintFg = "#a6a6a6",
+            menuRound = 2
         )
         AppTheme.GLASS -> skin(
-            windowBg = "rgba(8,14,28,0.40)", ribbonBg = "rgba(14,22,40,0.90)",
-            menuBg = "rgba(12,20,36,0.92)", menuFg = "#f7f9ff",
-            popupBg = "rgba(16,24,42,0.96)", popupFg = "#f7f9ff",
-            editorBg = "#101828", editorFg = "#f7f9ff",
-            statusBg = "rgba(12,20,36,0.92)", statusFg = "#e7eeff",
-            border = "rgba(186,208,255,0.55)",
-            buttonHover = "rgba(47,111,222,0.72)", buttonFg = "#ffffff",
-            labelFg = "#dce6ff", accent = "#2f6fde",
-            menuHoverBg = "#2f6fde", menuHoverFg = "#ffffff",
-            itemHoverBg = "#2f6fde", itemHoverFg = "#ffffff", hintFg = "#c9d7f5"
+            windowBg = "#d5e4ef", ribbonBg = "#f7fbfe", menuBg = "#e7f2f8", menuFg = "#1a3348",
+            popupBg = "#f8fbfe", popupFg = "#1a3348", editorBg = "#ffffff", editorFg = "#182638",
+            statusBg = "#e7f2f8", statusFg = "#1a3348", border = "#b7c9d8",
+            buttonHover = "#d5e7f3", buttonFg = "#1a3348", labelFg = "#3d5670", accent = "#1d5f96",
+            menuHoverBg = "#d5e7f3", menuHoverFg = "#1a3348",
+            itemHoverBg = "#d5e7f3", itemHoverFg = "#1a3348", hintFg = "#4e6578",
+            menuRound = 6
         )
         AppTheme.NOTEPAD_WIN11 -> skin(
             windowBg = "#e9e9e9", ribbonBg = "#f9f9f9", menuBg = "#f9f9f9", menuFg = "#1a1a1a",
@@ -202,15 +288,6 @@ object Theme {
             menuHoverBg = "#2a3344", menuHoverFg = "#ffffff",
             itemHoverBg = "#2f4f86", itemHoverFg = "#ffffff", hintFg = "#a9b4c7"
         )
-        AppTheme.OPEN_OFFICE -> skin(
-            windowBg = "#b7bcc4", ribbonBg = "#e3e8f0", menuBg = "#e7eaf0", menuFg = "#1b2838",
-            popupBg = "#f7f9fb", popupFg = "#1b2838", editorBg = "#ffffff", editorFg = "#202020",
-            statusBg = "#e6e9ee", statusFg = "#1b2838", border = "#a8b2c0",
-            buttonHover = "#d5e4f4", buttonFg = "#1b2838", labelFg = "#3d4e62", accent = "#2f6ea3",
-            menuHoverBg = "#d5e4f4", menuHoverFg = "#1b2838",
-            itemHoverBg = "#cfe3f6", itemHoverFg = "#1b2838", hintFg = "#4d5d70",
-            menuRound = 2
-        )
         AppTheme.MYOFFICE -> skin(
             windowBg = "#d5e2ee", ribbonBg = "#ffffff", menuBg = "#0b5cab", menuFg = "#ffffff",
             popupBg = "#ffffff", popupFg = "#1a1a1a", editorBg = "#ffffff", editorFg = "#1a1a1a",
@@ -219,6 +296,7 @@ object Theme {
             menuHoverBg = "#084f92", menuHoverFg = "#ffffff",
             itemHoverBg = "#0b5cab", itemHoverFg = "#ffffff", hintFg = "#5a6e82"
         )
+        else -> OpenOfficeTheme.pack(theme)
     }
 
     private fun skin(
@@ -251,6 +329,8 @@ object Theme {
     )
 
     fun applyCss(scene: Scene, pack: Pack) {
+        scene.root.styleClass.remove("glass-office")
+        if (pack == pack(AppTheme.GLASS)) scene.root.styleClass.add("glass-office")
         val ink = ink(pack)
         val itemRound = min(4, pack.menuRound)
         val css = """
@@ -329,6 +409,7 @@ object Theme {
                 -fx-border-insets: 1 8 0 8;
             }
             .tool-bar { -fx-background-color: transparent; -fx-padding: 0; }
+            .office-inspector, .office-inspector .viewport { -fx-background-color: ${pack.menuBg}; }
             .text-area {
                 -fx-background-color: ${pack.editorBg};
                 -fx-text-fill: ${pack.editorFg};
@@ -463,7 +544,17 @@ object Theme {
                 -fx-font-size: 12px;
                 -fx-padding: 6 8 6 8;
             }
+            .office-icon { -fx-stroke: ${pack.popupFg}; -fx-fill: transparent; }
+            .context-menu .menu-item:focused .office-icon,
+            .context-menu .menu-item:showing .office-icon {
+                -fx-stroke: ${ink.itemHoverFg};
+            }
             .scroll-pane { -fx-background-color: transparent; }
+            .office-ribbon-scroll > .viewport { -fx-background-color: transparent; }
+            .editor-desk > .viewport { -fx-background-color: transparent; }
+            .glass-office .office-ribbon-scroll .button { -fx-border-color: transparent; }
+            .glass-office .office-ribbon-scroll .button:focused { -fx-border-color: ${pack.accent}; }
+            .glass-office .separator .line { -fx-border-color: ${pack.border}; -fx-border-width: 0 0 0 1; }
         """.trimIndent()
         val file = File.createTempFile("g134-theme-", ".css")
         file.writeText(css)

@@ -210,15 +210,29 @@ object FicbookBrowserAuth {
     }
 
     private fun readSqlite(db: File, map: (java.sql.ResultSet) -> BrowserCookie?): List<BrowserCookie> {
-        val urls = buildList {
-            copySqlite(db)?.let { add(sqliteUrl(it, "mode=ro")) }
-            add(sqliteUrl(db, "mode=ro&nolock=1"))
+        val copied = runCatching {
+            withPrivateDatabaseCopy(db) { copy -> querySqlite(sqliteUrl(copy, "mode=ro"), map) }
+        }.getOrNull()
+        if (!copied.isNullOrEmpty()) return copied
+        return querySqlite(sqliteUrl(db, "mode=ro&nolock=1"), map)
+    }
+
+    /** Copies the database for reading and deletes the copy, including after an error. */
+    internal fun <T> withPrivateDatabaseCopy(db: File, block: (File) -> T): T? {
+        if (!db.isFile) return null
+        val dir = runCatching { Files.createTempDirectory("g134-cookies") }.getOrNull() ?: return null
+        try {
+            restrictToCurrentUser(dir)
+            val dest = dir.resolve(db.name)
+            Files.copy(db.toPath(), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            listOf("-wal", "-shm").forEach { suffix ->
+                val extra = File(db.path + suffix)
+                if (extra.isFile) Files.copy(extra.toPath(), dir.resolve(db.name + suffix))
+            }
+            return block(dest.toFile())
+        } finally {
+            dir.toFile().deleteRecursively()
         }
-        urls.forEach { url ->
-            val rows = querySqlite(url, map)
-            if (rows.isNotEmpty()) return rows
-        }
-        return emptyList()
     }
 
     private fun sqliteUrl(db: File, options: String): String =
@@ -248,21 +262,6 @@ object FicbookBrowserAuth {
                 }
             }
         }.getOrDefault(emptyList())
-    }
-
-    private fun copySqlite(db: File): File? {
-        if (!db.isFile) return null
-        return runCatching {
-            val dir = Files.createTempDirectory("g134-cookies").toFile()
-            dir.deleteOnExit()
-            val dest = File(dir, db.name)
-            db.copyTo(dest, overwrite = true)
-            listOf("-wal", "-shm").forEach { suffix ->
-                val extra = File(db.path + suffix)
-                if (extra.isFile) extra.copyTo(File(dir, db.name + suffix), overwrite = true)
-            }
-            dest
-        }.getOrNull()
     }
 
     private fun isWindows(): Boolean =

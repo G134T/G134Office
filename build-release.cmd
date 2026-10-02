@@ -12,7 +12,7 @@ if errorlevel 1 (
 
 echo.
 echo Done.
-echo   ZIP ^(requires JDK 26^): build\distributions\G134Office-1.0.0.zip
+echo   ZIP ^(requires JDK 26^): build\distributions\G134Office-1.0.1.zip
 echo   Bundled app:            build\package\G134Office\G134Office.exe
 echo.
 exit /b 0

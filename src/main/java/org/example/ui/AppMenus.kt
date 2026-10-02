@@ -1,6 +1,7 @@
 package org.example.ui
 
 import javafx.scene.control.CheckMenuItem
+import javafx.scene.paint.Color
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
 import javafx.scene.control.MenuItem
@@ -35,9 +36,17 @@ class AppMenus {
         AppTheme.entries.associateWith { theme ->
             RadioMenuItem(theme.title).apply { toggleGroup = themeGroup }
         }
+    private val layoutGroup = ToggleGroup()
+    val layoutItems: Map<UiChrome, RadioMenuItem> =
+        UiChrome.layouts.associateWith { chrome ->
+            RadioMenuItem(chrome.title).apply { toggleGroup = layoutGroup }
+        }
 
     val viewRuler = check("Линейка", false)
     val viewGrid = check("Сетка", false)
+    val viewPrintLayout = check("Разметка страницы", true)
+    val viewReadMode = check("Режим чтения", false)
+    val viewNavigation = check("Область навигации", false)
     val viewSpaceScroll = check("Прокрутка пробелом", false)
     val viewRibbon = check("Лента", true)
     val viewStatus = check("Строка состояния", true)
@@ -83,11 +92,6 @@ class AppMenus {
 
     lateinit var bar: MenuBar
         private set
-    private lateinit var editMenu: Menu
-    private lateinit var reviewMenu: Menu
-    private lateinit var formatMenu: Menu
-    private lateinit var insertMenu: Menu
-    private var chrome = UiChrome.STANDARD
 
     fun build(): MenuBar {
         val file = Menu("Файл", null, neu, open, close, save, saveAs, saveFanficChapter,
@@ -100,10 +104,14 @@ class AppMenus {
         )
         val view = Menu(
             "Вид", null,
-            viewRuler, viewGrid, viewSpaceScroll, SeparatorMenuItem(),
+            viewRuler, viewGrid, viewPrintLayout, viewReadMode, viewNavigation, viewSpaceScroll, SeparatorMenuItem(),
             viewRibbon, viewStatus, viewFanfic,
             Menu("Оформление").apply {
                 items.addAll(
+                    Menu("Раскладка").apply {
+                        items.addAll(UiChrome.layouts.map { layoutItems.getValue(it) })
+                    },
+                    SeparatorMenuItem(),
                     themeItems.getValue(AppTheme.LIGHT),
                     themeItems.getValue(AppTheme.GRAY),
                     themeItems.getValue(AppTheme.DARK),
@@ -113,8 +121,12 @@ class AppMenus {
                             themeItems.getValue(theme).also { item -> item.text = theme.wordYear ?: theme.title }
                         })
                     },
+                    Menu("OpenOffice").apply {
+                        items.addAll(ThemeFamily.OPEN_OFFICE.variants.map { theme ->
+                            themeItems.getValue(theme).also { item -> item.text = theme.officeYear ?: theme.title }
+                        })
+                    },
                     themeItems.getValue(AppTheme.NOTEPAD_WIN11),
-                    themeItems.getValue(AppTheme.OPEN_OFFICE),
                     themeItems.getValue(AppTheme.MYOFFICE)
                 )
             }, SeparatorMenuItem(),
@@ -145,10 +157,6 @@ class AppMenus {
         val help = Menu("Справка", null, about)
         val service = Menu("Сервис", null, settings)
         bar = MenuBar(file, home, view, insert, format, review, pdf, service, help)
-        editMenu = home
-        reviewMenu = review
-        formatMenu = format
-        insertMenu = insert
         setPdfEnabled(false)
         return bar
     }
@@ -173,41 +181,62 @@ class AppMenus {
         themeItems[theme]?.isSelected = true
     }
 
-    fun setChrome(next: UiChrome) {
-        chrome = next
-        if (!::bar.isInitialized) return
-        when (next) {
-            UiChrome.OPEN_OFFICE -> {
-                editMenu.text = "Правка"
-                insertSymbol.text = "Специальный символ..."
-                formatMenu.text = "Формат"
-                reviewMenu.text = "Сервис"
-            }
-            UiChrome.MY_OFFICE -> {
-                editMenu.text = "Главная"
-                insertSymbol.text = "Символы..."
-                formatMenu.text = "Макет"
-                reviewMenu.text = "Рецензирование"
-            }
-            UiChrome.STANDARD -> {
-                editMenu.text = "Главная"
-                insertSymbol.text = "Символ…"
-                formatMenu.text = "Формат"
-                reviewMenu.text = "Рецензирование"
+    fun selectLayout(layout: UiChrome?) {
+        val item = layout?.let { layoutItems[it] }
+        if (item == null) {
+            layoutGroup.selectToggle(null)
+        } else if (!item.isSelected) {
+            item.isSelected = true
+        }
+    }
+
+    /** Меню одно и то же для всех раскладок: Файл, Главная, Вид, Вставка, Формат, Рецензирование, PDF, Сервис, Справка. */
+    fun setChrome(@Suppress("UNUSED_PARAMETER") next: UiChrome) = Unit
+
+    internal fun setIconSet(next: IconSet, ink: String = "#1b1b1b") {
+        val color = runCatching { Color.web(ink) }.getOrDefault(Color.BLACK)
+        commandIcons.forEach { (item, name) ->
+            item.graphic = if (next == IconSet.CUSTOM) {
+                LucideIcons.menuGlyph(name).also { it.color(color) }
+            } else {
+                null
             }
         }
     }
 
+    private val commandIcons: Map<MenuItem, String>
+        get() = mapOf(
+            neu to OfficeIconCatalog.NEW,
+            open to OfficeIconCatalog.OPEN,
+            save to OfficeIconCatalog.SAVE,
+            commitFanficChapter to OfficeIconCatalog.COMMIT,
+            print to OfficeIconCatalog.PRINT,
+            exit to OfficeIconCatalog.EXIT,
+            undo to OfficeIconCatalog.UNDO,
+            redo to OfficeIconCatalog.REDO,
+            cut to OfficeIconCatalog.CUT,
+            copy to OfficeIconCatalog.COPY,
+            paste to OfficeIconCatalog.PASTE,
+            find to OfficeIconCatalog.FIND,
+            replace to OfficeIconCatalog.REPLACE,
+            zoomIn to OfficeIconCatalog.ZOOM_IN,
+            zoomOut to OfficeIconCatalog.ZOOM_OUT,
+            insertDate to OfficeIconCatalog.CALENDAR,
+            insertSymbol to OfficeIconCatalog.SYMBOL,
+            wordCount to OfficeIconCatalog.WORD_COUNT,
+            checkText to OfficeIconCatalog.SPELL,
+            alignLeft to OfficeIconCatalog.ALIGN_LEFT,
+            alignCenter to OfficeIconCatalog.ALIGN_CENTER,
+            alignRight to OfficeIconCatalog.ALIGN_RIGHT,
+            alignJustify to OfficeIconCatalog.ALIGN_JUSTIFY,
+            indentMore to OfficeIconCatalog.INDENT_MORE,
+            indentLess to OfficeIconCatalog.INDENT_LESS,
+            settings to OfficeIconCatalog.SETTINGS
+        )
+
     fun applyTheme(pack: Theme.Pack) {
         if (!::bar.isInitialized) return
-        bar.style = when (chrome) {
-            UiChrome.OPEN_OFFICE ->
-                "-fx-background-color: linear-gradient(to bottom, #f7f8fa, #dce2eb); -fx-border-color: #9daab9; -fx-border-width: 0 0 1 0;"
-            UiChrome.MY_OFFICE ->
-                "-fx-background-color: #0b5cab; -fx-border-color: #084b8a; -fx-border-width: 0 0 1 0;"
-            UiChrome.STANDARD ->
-                "-fx-background-color: ${pack.menuBg};"
-        }
+        bar.style = "-fx-background-color: ${pack.menuBg}; -fx-border-color: ${pack.border}; -fx-border-width: 0 0 1 0;"
     }
 
     private fun item(text: String, hotkey: String? = null) = MenuItem(text).apply {

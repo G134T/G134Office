@@ -90,18 +90,11 @@ internal object HtmlLayoutReader {
                     HTML.Tag.IMG -> {
                         val src = attributes.getAttribute(HTML.Attribute.SRC)?.toString().orEmpty()
                         val picture = runCatching {
-                            val bytes = if (src.startsWith("data:") && src.contains(";base64,"))
-                                Base64.getDecoder().decode(src.substringAfter(";base64,"))
-                            else if (!src.contains("://") && !src.startsWith("file:"))
-                                File(file.parentFile, src).takeIf { it.isFile }?.readBytes()
-                            else null
-                            bytes?.let { ImageBlock(it, when {
-                                src.contains("jpeg", true) || src.endsWith(".jpg", true) -> "image/jpeg"
-                                src.contains("gif", true) -> "image/gif"
-                                else -> "image/png"
-                            }, length(attributes.getAttribute(HTML.Attribute.WIDTH)?.toString()) ?: 300.0,
+                            val bytes = imageBytes(file, src) ?: return@runCatching null
+                            ImageBlock(bytes, imageType(bytes),
+                                length(attributes.getAttribute(HTML.Attribute.WIDTH)?.toString()) ?: 300.0,
                                 length(attributes.getAttribute(HTML.Attribute.HEIGHT)?.toString()) ?: 200.0,
-                                attributes.getAttribute(HTML.Attribute.ALT)?.toString().orEmpty()) }
+                                attributes.getAttribute(HTML.Attribute.ALT)?.toString().orEmpty())
                         }.getOrNull()
                         if (picture != null) { flush(); blocks += picture }
                     }
@@ -138,5 +131,47 @@ internal object HtmlLayoutReader {
                 length(css["margin"])?.let { document.marginPt = it }
             }
         }
+    }
+
+    private const val MAX_IMAGE_BYTES = 20 * 1024 * 1024
+
+    private fun imageBytes(documentFile: File, src: String): ByteArray? {
+        if (src.isBlank() || src.indexOf('\u0000') >= 0) return null
+        val bytes = when {
+            src.startsWith("data:", true) && src.contains(";base64,") ->
+                runCatching { Base64.getDecoder().decode(src.substringAfter(";base64,")) }.getOrNull()
+            src.contains("://") || src.startsWith("file:", true) -> null
+            else -> localImage(documentFile, src)
+        } ?: return null
+        if (bytes.isEmpty() || bytes.size > MAX_IMAGE_BYTES || !looksLikeImage(bytes)) return null
+        return bytes
+    }
+
+    /** Relative images only, and only inside the HTML file's own directory. */
+    private fun localImage(documentFile: File, src: String): ByteArray? {
+        val base = documentFile.parentFile?.canonicalFile ?: return null
+        val target = File(base, src).canonicalFile
+        if (!target.toPath().startsWith(base.toPath())) return null
+        if (!target.isFile || target.length() <= 0L || target.length() > MAX_IMAGE_BYTES) return null
+        return target.readBytes()
+    }
+
+    private fun looksLikeImage(bytes: ByteArray): Boolean {
+        if (bytes.size < 8) return false
+        if (bytes[0] == 0x89.toByte() && bytes[1] == 0x50.toByte() && bytes[2] == 0x4E.toByte() && bytes[3] == 0x47.toByte()) return true
+        if (bytes[0] == 0xFF.toByte() && bytes[1] == 0xD8.toByte() && bytes[2] == 0xFF.toByte()) return true
+        if (bytes[0] == 'G'.code.toByte() && bytes[1] == 'I'.code.toByte() && bytes[2] == 'F'.code.toByte()) return true
+        if (bytes[0] == 'B'.code.toByte() && bytes[1] == 'M'.code.toByte()) return true
+        return bytes.size >= 12 &&
+            bytes[0] == 'R'.code.toByte() && bytes[1] == 'I'.code.toByte() && bytes[2] == 'F'.code.toByte() &&
+            bytes[8] == 'W'.code.toByte() && bytes[9] == 'E'.code.toByte() && bytes[10] == 'B'.code.toByte() && bytes[11] == 'P'.code.toByte()
+    }
+
+    private fun imageType(bytes: ByteArray): String = when {
+        bytes.size >= 3 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xD8.toByte() -> "image/jpeg"
+        bytes.size >= 3 && bytes[0] == 'G'.code.toByte() && bytes[1] == 'I'.code.toByte() -> "image/gif"
+        bytes.size >= 12 && bytes[0] == 'R'.code.toByte() && bytes[8] == 'W'.code.toByte() -> "image/webp"
+        bytes.size >= 2 && bytes[0] == 'B'.code.toByte() && bytes[1] == 'M'.code.toByte() -> "image/bmp"
+        else -> "image/png"
     }
 }

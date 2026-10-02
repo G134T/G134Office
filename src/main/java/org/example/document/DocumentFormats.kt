@@ -120,7 +120,8 @@ object DocumentFormats {
         if (file.extension.lowercase() != "docx") {
             throw IllegalArgumentException("Сохрани документ как .docx")
         }
-        AtomicFileSave.write(file) { temporary -> writeRichDocx(temporary, document) }
+        val source = file.takeIf { it.isFile }
+        AtomicFileSave.write(file) { temporary -> writeRichDocx(temporary, document, source) }
     }
 
     private fun readRichDocx(file: File): Document {
@@ -181,6 +182,10 @@ object DocumentFormats {
             ?: when (headingLevel) { 1 -> 22.0; 2 -> 18.0; 3 -> 16.0; else -> 12.0 }
         paragraph.fontFamily = source.runs.firstNotNullOfOrNull { it.fontFamily } ?: "Calibri"
         paragraph.bold = headingLevel != null
+        paragraph.outlineLevel = (headingLevel ?: 0).coerceIn(0, 6)
+        // Preserve Word/OpenOffice-style keep rules when importing DOCX.
+        paragraph.keepWithNext = source.isKeepNext
+        paragraph.keepTogether = source.ctp.pPr?.isSetKeepLines == true || headingLevel != null
         paragraph.setRuns(source.runs.map { run ->
             TextRun(
                 text = run.text().orEmpty(),
@@ -203,25 +208,18 @@ object DocumentFormats {
         return paragraph
     }
 
-    private fun writeRichDocx(file: File, document: Document) {
-        XWPFDocument().use { word ->
-            val section = word.document.body.addNewSectPr()
-            section.addNewPgSz().also {
-                it.w = BigInteger.valueOf((document.pageWidthPt * 20).toLong())
-                it.h = BigInteger.valueOf((document.pageHeightPt * 20).toLong())
-            }
-            section.addNewPgMar().also {
-                it.left = BigInteger.valueOf((document.marginLeftPt * 20).toLong())
-                it.right = BigInteger.valueOf((document.marginRightPt * 20).toLong())
-                it.top = BigInteger.valueOf((document.marginTopPt * 20).toLong())
-                it.bottom = BigInteger.valueOf((document.marginBottomPt * 20).toLong())
-            }
+    private fun writeRichDocx(file: File, document: Document, source: File?) {
+        val preserved = openDocxWithExternalParts(source)
+        val word = preserved ?: XWPFDocument()
+        word.use { doc ->
+            if (preserved != null) clearBody(doc)
+            applySection(doc, document)
             document.blocks.forEach { block ->
                 when (block) {
-                    is Paragraph -> writeParagraph(word.createParagraph(), block)
+                    is Paragraph -> writeParagraph(doc.createParagraph(), block)
                     is TableBlock -> {
                         val cols = block.rows.maxOfOrNull { it.size }?.coerceAtLeast(1) ?: 1
-                        val table = word.createTable(block.rows.size.coerceAtLeast(1), cols)
+                        val table = doc.createTable(block.rows.size.coerceAtLeast(1), cols)
                         block.rows.forEachIndexed { rowIndex, row ->
                             row.forEachIndexed { colIndex, cell ->
                                 val target = table.getRow(rowIndex).getCell(colIndex)
@@ -236,15 +234,47 @@ object DocumentFormats {
                             "image/gif" -> XWPFDocument.PICTURE_TYPE_GIF
                             else -> XWPFDocument.PICTURE_TYPE_PNG
                         }
-                        val run = word.createParagraph().createRun()
+                        val run = doc.createParagraph().createRun()
                         ByteArrayInputStream(block.bytes).use {
                             run.addPicture(it, type, "image", Units.toEMU(block.widthPt), Units.toEMU(block.heightPt))
                         }
                     }
                 }
             }
-            FileOutputStream(file).use { word.write(it) }
+            FileOutputStream(file).use { doc.write(it) }
         }
+    }
+
+    /** Reuse the package only when it holds parts the editor does not model. */
+    private fun openDocxWithExternalParts(source: File?): XWPFDocument? {
+        if (source == null || !source.isFile || source.length() == 0L) return null
+        val word = runCatching { XWPFDocument(ByteArrayInputStream(source.readBytes())) }.getOrNull() ?: return null
+        val keep = word.headerList.isNotEmpty() || word.footerList.isNotEmpty() ||
+            runCatching { word.footnotes?.isNotEmpty() == true }.getOrDefault(false)
+        if (!keep) {
+            word.close()
+            return null
+        }
+        return word
+    }
+
+    private fun clearBody(word: XWPFDocument) {
+        var guard = word.bodyElements.size
+        while (word.bodyElements.isNotEmpty() && guard-- > 0) {
+            word.removeBodyElement(word.bodyElements.lastIndex)
+        }
+    }
+
+    private fun applySection(word: XWPFDocument, document: Document) {
+        val section = word.document.body.sectPr ?: word.document.body.addNewSectPr()
+        val size = section.pgSz ?: section.addNewPgSz()
+        size.w = BigInteger.valueOf((document.pageWidthPt * 20).toLong())
+        size.h = BigInteger.valueOf((document.pageHeightPt * 20).toLong())
+        val margins = section.pgMar ?: section.addNewPgMar()
+        margins.left = BigInteger.valueOf((document.marginLeftPt * 20).toLong())
+        margins.right = BigInteger.valueOf((document.marginRightPt * 20).toLong())
+        margins.top = BigInteger.valueOf((document.marginTopPt * 20).toLong())
+        margins.bottom = BigInteger.valueOf((document.marginBottomPt * 20).toLong())
     }
 
     private fun writeParagraph(target: XWPFParagraph, source: Paragraph) {
@@ -255,6 +285,15 @@ object DocumentFormats {
         target.spacingAfter = (source.spacingAfterPt * 20).toInt()
         target.setSpacingBetween(source.lineSpacing)
         target.isPageBreak = source.pageBreakBefore
+        target.isKeepNext = source.keepWithNext
+        if (source.keepTogether) target.ctp.getPPr().let { pPr ->
+            (pPr ?: target.ctp.addNewPPr()).addNewKeepLines()
+        }
+        when (source.outlineLevel) {
+            1 -> target.style = "Heading1"
+            2 -> target.style = "Heading2"
+            in 3..6 -> target.style = "Heading${source.outlineLevel}"
+        }
         target.alignment = when (source.align) {
             Align.LEFT -> org.apache.poi.xwpf.usermodel.ParagraphAlignment.LEFT
             Align.CENTER -> org.apache.poi.xwpf.usermodel.ParagraphAlignment.CENTER
@@ -270,7 +309,7 @@ object DocumentFormats {
             run.isItalic = item.italic
             run.isStrikeThrough = item.strikethrough
             if (item.underline) run.underline = org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE
-            item.color?.let { run.color = it }
+            item.color?.let { run.color = it.trim().removePrefix("#") }
         }
     }
 

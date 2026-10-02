@@ -28,11 +28,20 @@ class PdfSession {
     val pageCount: Int get() = synchronized(lock) { document?.numberOfPages ?: 0 }
 
     fun open(target: File, password: String? = null) {
-        close()
-        val doc = if (password.isNullOrEmpty()) Loader.loadPDF(target) else Loader.loadPDF(target, password)
+        // Bytes, not the file: PDFBox would otherwise keep the path locked and Windows
+        // would refuse the atomic replace when saving over the open document.
+        val bytes = target.readBytes()
+        val doc = if (password.isNullOrEmpty()) Loader.loadPDF(bytes) else Loader.loadPDF(bytes, password)
+        val nextRenderer = try {
+            PDFRenderer(doc)
+        } catch (failure: Throwable) {
+            try { doc.close() } catch (cleanup: Exception) { failure.addSuppressed(cleanup) }
+            throw failure
+        }
         synchronized(lock) {
+            close()
             document = doc
-            renderer = PDFRenderer(doc)
+            renderer = nextRenderer
             file = target
             dirty = false
         }
@@ -104,12 +113,15 @@ class PdfSession {
 
     fun movePage(from: Int, to: Int) {
         withDocument { doc, _ ->
+            val count = doc.numberOfPages
+            require(from in 0 until count && to in 0 until count)
             if (from == to) return@withDocument
             val page = doc.getPage(from)
             doc.removePage(from)
-            val adj = if (to > from) to - 1 else to
-            if (adj >= doc.numberOfPages) doc.addPage(page)
-            else doc.pages.insertBefore(page, doc.getPage(adj))
+            // `to` is the page's final index. After removal that index is already correct:
+            // shifting it back again puts a forward move on the old slot.
+            if (to >= doc.numberOfPages) doc.addPage(page)
+            else doc.pages.insertBefore(page, doc.getPage(to))
             rebuildRenderer(doc)
             dirty = true
         }

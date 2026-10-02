@@ -22,5 +22,5 @@ if errorlevel 1 (
   echo Inno Setup failed
   exit /b 1
 )
-echo OK build\installer\G134Office-Setup-1.0.0.exe
+echo OK build\installer\G134Office-Setup-1.0.1.exe
 exit /b 0

@@ -3,7 +3,6 @@ package org.example.ui
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Scene
-import javafx.scene.control.Alert
 import javafx.scene.control.Button
 import javafx.scene.control.CheckBox
 import javafx.scene.control.Label
@@ -16,7 +15,6 @@ import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.Modality
 import javafx.stage.Stage
-import java.util.regex.Matcher
 import java.util.regex.Pattern
 import org.example.engine.EditorCanvas
 
@@ -30,7 +28,7 @@ class FindReplaceDialog(private val editor: EditorCanvas) {
     private val wholeWord = CheckBox("Слово целиком")
     private val status = Label(" ")
 
-    fun show(owner: Stage, replaceMode: Boolean) {
+    fun show(owner: Stage, replaceMode: Boolean, pack: Theme.Pack) {
         stage?.takeIf { it.isShowing }?.let {
             it.title = if (replaceMode) "Найти и заменить" else "Найти"
             replaceField.isDisable = !replaceMode
@@ -84,20 +82,24 @@ class FindReplaceDialog(private val editor: EditorCanvas) {
 
         val flags = HBox(12.0, matchCase, wholeWord).apply { alignment = Pos.CENTER_LEFT }
         val actions = HBox(8.0, findNext, replaceButton, replaceAllButton, count, close)
-        status.style = "-fx-text-fill: #888; -fx-font-size: 11px;"
+        status.style = "-fx-text-fill: ${Theme.ink(pack).hintFg}; -fx-font-size: 12px;"
 
-        val root = VBox(10.0, grid, flags, actions, status).apply {
-            padding = Insets(14.0)
+        val root = VBox(12.0, grid, flags, actions, status).apply {
+            padding = Insets(16.0)
+            style = "-fx-background-color: ${pack.popupBg};"
         }
 
-        window.scene = Scene(root, 520.0, 200.0)
+        window.scene = Scene(root, 560.0, 220.0).apply {
+            stylesheets.add(Theme.dialogStylesheet(pack))
+        }
         window.setOnCloseRequest { stage = null }
         stage = window
         window.show()
         findField.requestFocus()
         val selected = editor.selectedRange()?.let { editor.plainText().substring(it.first, it.last + 1) }.orEmpty()
-        if (selected.isNotEmpty() && selected.length < 80) {
-            findField.text = selected
+        val oneLine = selected.substringBefore('\n')
+        if (oneLine.isNotEmpty() && !selected.contains('\n') && oneLine.length <= 80) {
+            findField.text = oneLine
             findField.selectAll()
         }
     }
@@ -119,10 +121,6 @@ class FindReplaceDialog(private val editor: EditorCanvas) {
         }
         if (found == null) {
             status.text = "Совпадений нет."
-            Alert(Alert.AlertType.INFORMATION, "Больше совпадений нет.").apply {
-                headerText = null
-                title = "Найти"
-            }.showAndWait()
             return
         }
         editor.requestFocus()
@@ -144,15 +142,12 @@ class FindReplaceDialog(private val editor: EditorCanvas) {
         val regex = buildRegex(query)
         val original = editor.plainText()
         val matcher = regex.matcher(original)
-        val replacement = Matcher.quoteReplacement(replaceField.text)
-        val sb = StringBuffer()
-        var n = 0
+        val ranges = mutableListOf<IntRange>()
         while (matcher.find()) {
-            matcher.appendReplacement(sb, replacement)
-            n++
+            ranges += matcher.start() until matcher.end()
         }
-        matcher.appendTail(sb)
-        if (n > 0) editor.replaceRange(0, original.length, sb.toString())
+        editor.replaceRanges(ranges, replaceField.text)
+        val n = ranges.size
         status.text = if (n == 0) "Нечего заменять." else "Заменено: $n"
     }
 

@@ -1,17 +1,44 @@
 package org.example.document
 
+import org.apache.poi.wp.usermodel.HeaderFooterType
+import org.apache.poi.xwpf.usermodel.XWPFDocument
 import org.example.engine.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.nio.file.Path
 import javax.imageio.ImageIO
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class RichDocumentTest {
     @TempDir lateinit var directory: Path
+
+    @Test
+    fun `docx saves CSS and imported RGB colors and reads them back`() {
+        val paragraph = Paragraph().also {
+            it.setRuns(listOf(
+                TextRun("Красный", color = "#ff0000"),
+                TextRun("Зелёный", color = "00aa00"),
+                TextRun("Авто", color = "auto"),
+                TextRun("Обычный")
+            ))
+        }
+        val document = Document().also { it.loadBlocks(listOf(paragraph)) }
+        val file = directory.resolve("colors.docx").toFile()
+        DocumentFormats.write(file, document)
+        val opened = DocumentFormats.readDocument(file)
+        assertEquals(paragraph.text, opened.paragraphs.first().text)
+        assertEquals(listOf("ff0000", "00aa00", "auto", null),
+            opened.paragraphs.first().runs.map { it.color?.lowercase() })
+        DocumentFormats.write(file, opened)
+        assertEquals(opened.paragraphs.first().runs, DocumentFormats.readDocument(file).paragraphs.first().runs)
+    }
 
     @Test
     fun `docx retains runs table and image across open and save`() {
@@ -49,6 +76,20 @@ class RichDocumentTest {
         val reopened = DocumentFormats.readDocument(second)
         assertTrue(reopened.blocks.any { it is TableBlock })
         assertTrue(reopened.blocks.any { it is ImageBlock })
+    }
+
+    @Test
+    fun `docx keeps a heading outline level`() {
+        val document = Document().also {
+            it.loadBlocks(listOf(Paragraph("Глава").also { paragraph ->
+                ParagraphFormatting.applyWordStyle(paragraph, 1)
+            }))
+        }
+        val file = directory.resolve("heading.docx").toFile()
+        DocumentFormats.write(file, document)
+        val opened = DocumentFormats.readDocument(file)
+        assertEquals("Глава", opened.paragraphs.first().text)
+        assertEquals(1, opened.paragraphs.first().outlineLevel)
     }
 
     @Test
@@ -150,5 +191,45 @@ class RichDocumentTest {
         assertTrue(result.paragraphs.first().runs.first().bold)
         assertTrue(result.blocks.any { it is TableBlock })
         assertTrue(result.blocks.any { it is ImageBlock })
+    }
+
+    @Test
+    fun `docx save keeps a header the editor does not show`() {
+        val file = directory.resolve("header.docx").toFile()
+        XWPFDocument().use { word ->
+            word.createHeader(HeaderFooterType.DEFAULT).createParagraph().createRun().setText("КОЛОНТИТУЛ")
+            word.createParagraph().createRun().setText("Основной")
+            FileOutputStream(file).use { word.write(it) }
+        }
+        val opened = DocumentFormats.readDocument(file)
+        opened.paragraphs.first().setRuns(listOf(TextRun("Изменённый")))
+        DocumentFormats.write(file, opened)
+        FileInputStream(file).use { input ->
+            XWPFDocument(input).use { word ->
+                assertEquals("КОЛОНТИТУЛ", word.headerList.joinToString("") { it.text }.trim())
+                assertEquals("Изменённый", word.paragraphs.joinToString("") { it.text }.trim())
+            }
+        }
+    }
+
+    @Test
+    fun `html images cannot escape the document folder`() {
+        directory.resolve("private-note.txt").toFile().writeText("SECRET-TOKEN")
+        val folder = directory.resolve("inbox").toFile().also { it.mkdirs() }
+        val png = ByteArrayOutputStream().also {
+            ImageIO.write(BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB), "png", it)
+        }.toByteArray()
+        File(folder, "pic.png").writeBytes(png)
+        val html = File(folder, "document.html")
+        html.writeText("""<html><body><p>Видно</p><img src="../private-note.txt"><img src="pic.png"></body></html>""")
+        val opened = DocumentFormats.readDocument(html)
+        assertEquals("Видно", opened.toPlainText().trim())
+        val images = opened.blocks.filterIsInstance<ImageBlock>()
+        assertEquals(1, images.size)
+        assertEquals("image/png", images.single().contentType)
+        assertFalse(images.single().bytes.toString(Charsets.ISO_8859_1).contains("SECRET-TOKEN"))
+        val exported = directory.resolve("exported.html").toFile()
+        DocumentFormats.write(exported, opened)
+        assertFalse(exported.readText().contains("SECRET-TOKEN"))
     }
 }

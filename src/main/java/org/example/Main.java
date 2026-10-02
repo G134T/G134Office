@@ -12,7 +12,7 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) {
         org.example.fanfic.FicbookCookies.INSTANCE.install();
-        new MainWindow(stage).show(getParameters().getRaw().stream().findFirst().orElse(null));
+        new MainWindow(stage).show(getParameters().getRaw());
         System.err.println("Main window ready");
     }
 }

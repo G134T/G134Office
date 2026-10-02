@@ -4,6 +4,7 @@ import javafx.geometry.Insets
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
 import javafx.scene.control.Label
+import javafx.scene.control.OverrunStyle
 import javafx.scene.control.Separator
 import javafx.scene.control.Tooltip
 import javafx.scene.layout.HBox
@@ -12,17 +13,31 @@ import javafx.scene.layout.Region
 import javafx.scene.layout.VBox
 
 class StatusBarPane : HBox() {
-    private var chrome = UiChrome.STANDARD
-    private val path = chip("", "Файл")
-    private val position = chip("Стр 1  Кол 1", "Позиция курсора")
-    private val words = chip("Слов: 0", "Статистика")
+    private val path = chip("", "Файл").apply {
+        maxWidth = 320.0
+        textOverrun = OverrunStyle.CENTER_ELLIPSIS
+    }
+    private val position = chip("Стр. 1 из 1", "Страница")
+    private val caret = chip("1:1", "Строка и столбец")
+    private val words = chip("Слов 0", "Статистика")
+    private val zoom = chip("100%", "Масштаб")
     private val language = chip("Русский", "Язык проверки")
     private val theme = chip("AMOLED", "Тема")
     private val align = chip("Слева", "Выравнивание")
     private val font = chip("Segoe UI 16", "Шрифт")
     private val message = chip("", "Состояние")
-    private val labels = listOf(path, position, words, language, theme, align, font, message)
+    private val labels = listOf(path, position, caret, words, zoom, language, theme, align, font, message)
     private val lines = mutableListOf<Separator>()
+    private val caretPad = pad(caret)
+    private val caretLine = vline()
+    private val wordsPad = pad(words)
+    private val zoomPad = pad(zoom)
+    private val zoomLine = vline()
+    private val fontPad = pad(font)
+    private val messagePad = pad(message).apply {
+        isVisible = false
+        isManaged = false
+    }
 
     init {
         alignment = Pos.CENTER_LEFT
@@ -34,50 +49,74 @@ class StatusBarPane : HBox() {
         setHgrow(spacer, Priority.ALWAYS)
         children.addAll(
             pad(path), vline(),
-            pad(position), vline(),
-            pad(words), pad(message),
+            pad(position), caretLine, caretPad, vline(),
+            wordsPad, messagePad,
             spacer,
+            zoomLine, zoomPad,
             vline(), pad(language),
             vline(), pad(theme),
             vline(), pad(align),
-            vline(), pad(font)
+            vline(), fontPad
         )
     }
 
-    fun setMessage(text: String) { message.text = text }
+    fun setMessage(text: String) {
+        message.text = text
+        val show = text.isNotBlank()
+        messagePad.isVisible = show
+        messagePad.isManaged = show
+    }
 
-    fun setChrome(next: UiChrome) { chrome = next }
+    fun setChrome(@Suppress("UNUSED_PARAMETER") next: UiChrome) = Unit
 
     fun update(
         filePath: String,
+        page: Int,
+        pageCount: Int,
         line: Int,
-        col: Int,
-        linesCount: Int,
-        chars: Int,
+        column: Int,
+        textLines: Int,
         wordsCount: Int,
+        chars: Int,
+        zoomPercent: Int,
         languageTitle: String = language.text,
         themeTitle: String = theme.text,
         alignTitle: String = align.text,
-        fontTitle: String = font.text
+        fontTitle: String = font.text,
+        summary: String? = null,
+        showCaret: Boolean = true
     ) {
-        path.text = filePath.ifBlank { "Новый документ" }
-        position.text = "Стр $line  Кол $col"
-        words.text = "Слов $wordsCount   строк $linesCount   знаков $chars"
+        val shownPath = filePath.ifBlank { "Новый документ" }
+        path.text = shownPath
+        path.tooltip?.text = filePath.ifBlank { "Новый документ" }
+        position.text = "Стр. $page из $pageCount"
+        caret.text = "$line:$column"
+        caret.tooltip?.text = "Строка $line, столбец $column"
+        caretPad.isVisible = showCaret
+        caretPad.isManaged = showCaret
+        caretLine.isVisible = showCaret
+        caretLine.isManaged = showCaret
+        if (summary == null) words.text = "Слов $wordsCount · строк $textLines · знаков $chars"
+        else words.text = summary
+        wordsPad.isVisible = words.text.isNotBlank()
+        wordsPad.isManaged = wordsPad.isVisible
+        zoom.text = "$zoomPercent%"
+        val showZoom = summary == null
+        zoomPad.isVisible = showZoom
+        zoomPad.isManaged = showZoom
+        zoomLine.isVisible = showZoom
+        zoomLine.isManaged = showZoom
         language.text = languageTitle
         theme.text = themeTitle
         align.text = alignTitle
         font.text = fontTitle
+        val showFont = fontTitle.isNotBlank()
+        fontPad.isVisible = showFont
+        fontPad.isManaged = showFont
     }
 
     fun applyTheme(pack: Theme.Pack) {
-        style = when (chrome) {
-            UiChrome.OPEN_OFFICE ->
-                "-fx-background-color: linear-gradient(to bottom, #f5f7fa, #dce2e9); -fx-border-color: #a6b0bc; -fx-border-width: 1 0 0 0;"
-            UiChrome.MY_OFFICE ->
-                "-fx-background-color: #0b5cab; -fx-border-color: #084b8a; -fx-border-width: 1 0 0 0;"
-            UiChrome.STANDARD ->
-                "-fx-background-color: ${pack.statusBg}; -fx-border-color: ${pack.border}; -fx-border-width: 1 0 0 0;"
-        }
+        style = "-fx-background-color: ${pack.statusBg}; -fx-border-color: ${pack.border}; -fx-border-width: 1 0 0 0;"
         val text = "-fx-text-fill: ${pack.statusFg}; -fx-font-size: 11px;"
         labels.forEach { it.style = text }
         lines.forEach {

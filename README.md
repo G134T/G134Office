@@ -14,16 +14,25 @@
 
 Настольный редактор на Kotlin/Java и JavaFX.
 
+## Лицензия и происхождение
+
+Исходный код G134Office распространяется по MIT License. Полный текст находится в `LICENSE`; уведомление о происхождении — в `NOTICE`. У сторонних библиотек свои лицензии.
+
+G134Office — независимый проект, вдохновлённый Apache OpenOffice. Это не форк Apache OpenOffice; проект не связан с Apache Software Foundation и не одобрен ею. Apache OpenOffice и OpenOffice — товарные знаки Apache Software Foundation.
+
 ## Сборка и запуск
 
 Требуется JDK 26. Укажите его в `JAVA_HOME` и используйте Gradle Wrapper
 из проекта; отдельная установка Gradle не нужна. При первой сборке нужен
-доступ к Gradle Plugin Portal и Maven Central для загрузки зависимостей.
+доступ к Gradle Plugin Portal, Maven Central и `download2.gluonhq.com`.
+Официальные JavaFX SDK и JMODs автоматически скачиваются в `build/javafx`
+и проверяются по SHA-256; в репозиторий они не добавляются.
 
 Версии: Gradle 9.6.0, Kotlin 2.4.20, JavaFX 26.0.2.
 Версия Kotlin задаётся в `settings.gradle.kts`, общий Java/Kotlin toolchain —
-в `build.gradle.kts`. Скомпилированное приложение требует Java 26, если
-запускать ZIP-дистрибутив. Папка из `jpackage` уже содержит свою JVM.
+в `build.gradle.kts`. JavaFX JARs из SDK используются только для компиляции.
+Задача `jlinkRuntime` собирает runtime из JavaFX JMODs и JDK JMODs, а
+`packageApp` передаёт его в `jpackage --runtime-image`.
 
 ```powershell
 .\gradlew.bat test
@@ -39,8 +48,8 @@
 
 `release` прогоняет тесты и собирает:
 
-- `build/distributions/G134Office-1.0.0.zip` — скрипт `bin/G134Office.bat` и библиотеки, нужна JDK 26 в `JAVA_HOME` или PATH
-- `build/package/G134Office/` — готовое приложение со встроенной JVM, запуск `G134Office.exe`
+- `build/distributions/G134Office-1.0.1.zip` — скрипт `bin/G134Office.bat` и библиотеки, нужна JDK 26 в `JAVA_HOME` или PATH
+- `build/package/G134Office/` — готовое приложение с контролируемым `jlink`-runtime, запуск `G134Office.exe`
 
 Отчёт тестов: `build/reports/tests/test/index.html`.
 
@@ -62,19 +71,23 @@
 самой JVM) этот класс перехватить не может. Журналы можно удалять при закрытом
 приложении; они могут содержать локальные пути и сообщения библиотек.
 
-При проверке EXE 26.09.2026 обнаружена блокировка неподписанной `glass.dll`
-политикой Smart App Control (журнал Windows CodeIntegrity, события 3033/3077).
-Это объясняет воспроизведённый отказ запуска. Изменение правил брандмауэра
-не устраняет блокировку целостности кода.
+JavaFX больше не берётся из Maven Central для упаковки: release-сборка использует
+официальные Windows JMODs и размещает нативные библиотеки в `runtime\bin\javafx`.
+Это устраняет извлечение JavaFX DLL из Maven JARs и делает структуру runtime
+предсказуемой для проверки Smart App Control.
 
-Сборка размещает DLL JavaFX в `build/package/G134Office/bin`, где штатный
-загрузчик JavaFX ищет их перед распаковкой из JAR. Это позволяет подписать
-DLL после `build-release.cmd` и до `build-installer.cmd`. Само перемещение
-библиотек не делает их доверенными. Для выпуска нужно подписать EXE и DLL
-доверенным сертификатом Authenticode, затем собрать и подписать установщик.
-Повторная сборка приложения заменяет подписанные файлы. Нативные библиотеки
-остальных зависимостей, включая извлекаемые из JAR, также требуют проверки
-подписи при подготовке выпуска.
+`jpackage` собирает runtime через `jlink` и при этом снимает Authenticode-подпись
+с DLL JDK: код тот же, но без подписи поставщика. Smart App Control блокирует
+такую копию — у установленного приложения это был `runtime\bin\net.dll`.
+Сборка возвращает подписанный оригинал из `bin` того же JDK, только если образ
+DLL совпадает побайтно и отличается лишь блоком подписи. Повторный `jpackage`
+снова снимает подпись, поэтому возврат выполняется в конце `packageApp`.
+
+JMODs сами по себе не создают доверенную Authenticode-подпись JavaFX DLL.
+Перед выпуском нужно проверить `runtime\bin\javafx` на целевой политике SAC
+и получить доверенную подпись JavaFX от поставщика либо согласовать подпись
+дистрибутива с доверенным сертификатом. Код приложения защиту Windows не
+отключает и исключений не добавляет.
 
 Требования Microsoft:
 https://learn.microsoft.com/en-us/windows/apps/develop/smart-app-control/code-signing-for-smart-app-control

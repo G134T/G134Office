@@ -1,11 +1,18 @@
 package org.example.fanfic
 
+import com.sun.jna.platform.win32.Crypt32Util
 import java.io.File
 import java.net.CookieHandler
 import java.net.CookieManager
 import java.net.CookiePolicy
 import java.net.HttpCookie
 import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.attribute.AclEntry
+import java.nio.file.attribute.AclEntryPermission
+import java.nio.file.attribute.AclEntryType
+import java.nio.file.attribute.AclFileAttributeView
 
 object FicbookCookies {
     private val file = File(System.getProperty("user.home"), ".g134office/ficbook-cookies.txt")
@@ -21,7 +28,6 @@ object FicbookCookies {
 
     fun save() {
         runCatching {
-            file.parentFile.mkdirs()
             val lines = manager.cookieStore.cookies.map { cookie ->
                 listOf(
                     cookie.name.orEmpty(),
@@ -33,20 +39,20 @@ object FicbookCookies {
                     cookie.isHttpOnly.toString()
                 ).joinToString("\t")
             }
-            file.writeText(lines.joinToString("\n"))
+            CookieVault.write(file, lines.joinToString("\n"))
         }
     }
 
     fun clear(): Boolean = runCatching {
         install()
         manager.cookieStore.removeAll()
-        if (file.exists() && !file.delete()) file.writeText("")
+        CookieVault.wipe(file)
     }.isSuccess
 
     private fun load() {
         if (!file.isFile) return
         runCatching {
-            file.readLines().forEach { line ->
+            CookieVault.read(file).lineSequence().forEach { line ->
                 val parts = line.split('\t')
                 if (parts.size < 4) return@forEach
                 val cookie = HttpCookie(parts[0], parts[1]).apply {
@@ -92,4 +98,52 @@ object FicbookCookies {
         save()
         return added
     }
+}
+
+/** DPAPI blob on Windows. Older installs stored the same TSV as plain text and still load. */
+internal object CookieVault {
+    private val magic = "G134CK01".toByteArray(Charsets.US_ASCII)
+
+    fun write(file: File, text: String) {
+        if (text.isEmpty()) {
+            wipe(file)
+            return
+        }
+        file.parentFile?.mkdirs()
+        val raw = text.toByteArray(Charsets.UTF_8)
+        val stored = if (isWindows()) magic + Crypt32Util.cryptProtectData(raw) else raw
+        file.writeBytes(stored)
+        restrictToCurrentUser(file.toPath())
+    }
+
+    fun read(file: File): String {
+        if (!file.isFile || file.length() == 0L) return ""
+        val bytes = file.readBytes()
+        val plain = if (bytes.size > magic.size && bytes.copyOf(magic.size).contentEquals(magic)) {
+            Crypt32Util.cryptUnprotectData(bytes.copyOfRange(magic.size, bytes.size))
+        } else {
+            bytes
+        }
+        return String(plain, Charsets.UTF_8)
+    }
+
+    fun wipe(file: File) {
+        if (!file.isFile) return
+        val length = file.length().toInt().coerceAtLeast(0)
+        if (length > 0) file.writeBytes(ByteArray(length.coerceAtMost(1024 * 1024)))
+        if (!file.delete()) file.writeBytes(ByteArray(0))
+    }
+
+    private fun isWindows(): Boolean = System.getProperty("os.name").orEmpty().contains("win", true)
+}
+
+internal fun restrictToCurrentUser(path: Path) {
+    val view = Files.getFileAttributeView(path, AclFileAttributeView::class.java) ?: return
+    val owner = runCatching { view.owner }.getOrNull() ?: return
+    val entry = AclEntry.newBuilder()
+        .setType(AclEntryType.ALLOW)
+        .setPrincipal(owner)
+        .setPermissions(*AclEntryPermission.entries.toTypedArray())
+        .build()
+    runCatching { view.acl = listOf(entry) }
 }

@@ -28,6 +28,9 @@ internal object UiText {
         "Недавние файлы" to "Recent files", "Здесь появятся открытые документы." to "Opened documents will appear here.",
         "Настройки" to "Settings", "Интерфейс" to "Interface", "Документ по умолчанию" to "Default document",
         "Фикбук" to "Ficbook", "Файлы" to "Files", "Размер интерфейса" to "Interface scale",
+        "Авто" to "Automatic",
+        "Масштаб читается из разрешения и масштаба Windows. Свой процент включается после перезапуска." to
+            "Scale follows the Windows resolution and display scale. A custom percent applies after restart.",
         "Шрифт интерфейса" to "Interface font", "Размер шрифта" to "Font size",
         "Язык интерфейса" to "Interface language", "Тема" to "Theme", "Формат нового файла" to "New file format",
         "Ориентация" to "Orientation", "Размер страницы" to "Page size", "Режим при открытии" to "Mode on open",
@@ -41,6 +44,13 @@ internal object UiText {
         "Сохранить" to "Save", "Сохранить как..." to "Save As...", "Выход" to "Exit",
         "Главная" to "Home", "Вид" to "View", "Вставка" to "Insert", "Формат" to "Format",
         "Рецензирование" to "Review", "Справка" to "Help", "Оформление" to "Appearance",
+        "Правка" to "Edit", "Раскладка" to "Layout",
+        "Лента — Word" to "Ribbon — Word",
+        "Классический — OpenOffice" to "Classic — OpenOffice",
+        "Компактный — МойОфис" to "Compact — MyOffice",
+        "Панели инструментов" to "Toolbars", "Панель инструментов" to "Toolbar",
+        "Светлая, Серая, Тёмная AMOLED и Стеклянная меняют только цвета выбранной раскладки. Годы Word оставляют свою ленту, годы OpenOffice — классические панели, МойОфис — свой вид." to
+            "Light, Gray, Dark AMOLED and Glass change only the colors of the chosen layout. Word years keep their ribbon, OpenOffice years keep the classic bars, and MyOffice keeps its own look.",
         "Печать..." to "Print...", "Отменить" to "Undo", "Повторить" to "Redo",
         "Вырезать" to "Cut", "Копировать" to "Copy", "Вставить" to "Paste",
         "Выделить всё" to "Select all", "Найти..." to "Find...", "Заменить..." to "Replace...",
@@ -52,6 +62,12 @@ internal object UiText {
         "По центру" to "Center", "По правому краю" to "Align right", "По ширине" to "Justify",
         "Увеличить отступ" to "Increase indent", "Уменьшить отступ" to "Decrease indent",
         "О программе" to "About",
+        "Темы" to "Themes",
+        "Значки" to "Icons",
+        "Стандартные" to "Standard",
+        "Кастомные" to "Custom",
+        "Значки сразу появляются на ленте и в меню и берут цвет из темы." to
+            "Icons appear at once on the ribbon and menus and take their color from the theme.",
         "Курсор" to "Caret",
         "Цвет курсора" to "Caret color",
         "Скорость мигания" to "Blink speed",
@@ -70,11 +86,13 @@ internal object UiText {
 
 internal class UiSettings {
     private val prefs = Preferences.userNodeForPackage(RecentDocuments::class.java)
-    var scale: Int = prefs.getInt("ui.scale", 100).takeIf { it in listOf(75, 100, 125, 150) } ?: 100
+    var scaleAuto: Boolean = prefs.getBoolean("ui.scale.auto", true)
+    var scale: Int = snapScale(prefs.getInt("ui.scale", 100))
     var font: String = prefs.get("ui.font", "")
     var fontSize: Int = prefs.getInt("ui.fontSize", 13).coerceIn(12, 16)
     var language: String = prefs.get("ui.language", "ru")
     var theme: AppTheme? = AppTheme.entries.firstOrNull { it.name == prefs.get("ui.theme", "") }
+    var layout: UiChrome = UiChrome.fromPref(prefs.get("ui.layout", "")) ?: UiChrome.defaultLayout(theme)
     var format: String = prefs.get("document.format", "DOCX")
     var paper: Paper = Paper.entries.firstOrNull { it.name == prefs.get("document.paper", "A4") } ?: Paper.A4
     var landscape: Boolean = prefs.getBoolean("document.landscape", false)
@@ -86,18 +104,30 @@ internal class UiSettings {
     var caretColor: String = normalizeCaretColor(prefs.get("caret.color", DEFAULT_CARET_COLOR))
     /** 0 — скорость Windows, отрицательное — без мигания, иначе миллисекунды. */
     var caretBlinkMs: Int = normalizeCaretBlink(prefs.getInt("caret.blinkMs", 0))
+    var iconSet: IconSet = IconSet.fromPref(prefs.get("ui.icons", IconSet.STANDARD.name))
 
     fun save() {
+        prefs.putBoolean("ui.scale.auto", scaleAuto)
         prefs.putInt("ui.scale", scale); prefs.put("ui.font", font); prefs.putInt("ui.fontSize", fontSize)
         prefs.put("ui.language", language); theme?.let { prefs.put("ui.theme", it.name) }
+        prefs.put("ui.layout", layout.name)
         prefs.put("document.format", format); prefs.put("document.paper", paper.name)
         prefs.putBoolean("document.landscape", landscape); prefs.put("document.openMode", openMode)
         prefs.putInt("ficbook.previewWidth", previewWidth); prefs.put("ficbook.placement", placement)
         prefs.put("files.saveFolder", saveFolder); prefs.putInt("files.recentLimit", recentLimit)
         prefs.put("caret.color", normalizeCaretColor(caretColor))
         prefs.putInt("caret.blinkMs", normalizeCaretBlink(caretBlinkMs))
+        prefs.put("ui.icons", iconSet.name)
+    }
+
+    fun writeIconSet() {
+        prefs.put("ui.icons", iconSet.name)
     }
 }
+
+internal val interfaceScaleSteps = listOf(75, 100, 125, 150, 175, 200)
+
+internal fun snapScale(percent: Int): Int = interfaceScaleSteps.minBy { kotlin.math.abs(it - percent) }
 
 internal const val DEFAULT_CARET_COLOR = "#00B4D8"
 
@@ -113,7 +143,7 @@ internal fun normalizeCaretBlink(ms: Int): Int = when {
 }
 
 internal object SettingsDialog {
-    fun show(owner: Window, settings: UiSettings, clearRecent: () -> Unit): Boolean {
+    fun show(owner: Window, settings: UiSettings, onIcons: (IconSet) -> Unit, clearRecent: () -> Unit): Boolean {
         val t = { key: String -> UiText.get(key, settings.language) }
         val dialog = Dialog<Boolean>().apply { title = t("Настройки"); initOwner(owner) }
         val tabs = TabPane()
@@ -125,7 +155,12 @@ internal object SettingsDialog {
             rows.forEachIndexed { index, row -> grid.add(Label(t(row.first)), 0, index); grid.add(row.second, 1, index) }
             return Tab(t(title), grid).apply { isClosable = false }
         }
-        val scale = box(listOf(75, 100, 125, 150), settings.scale)
+        val scale = box(listOf(0, 75, 100, 125, 150, 175, 200), if (settings.scaleAuto) 0 else settings.scale)
+        scale.converter = object : StringConverter<Int>() {
+            override fun toString(value: Int?) = if (value == null || value == 0) t("Авто") else "$value%"
+            override fun fromString(value: String?) = value?.removeSuffix("%")?.toIntOrNull() ?: 0
+        }
+        scale.tooltip = Tooltip(t("Масштаб читается из разрешения и масштаба Windows. Свой процент включается после перезапуска."))
         val font = box(listOf("") + (Font.getFamilies() + "Segoe UI").distinct().sorted(), settings.font)
         font.converter = object : javafx.util.StringConverter<String>() {
             override fun toString(value: String?) = if (value.isNullOrEmpty()) t("Системный по умолчанию") else value
@@ -139,6 +174,13 @@ internal object SettingsDialog {
             override fun fromString(value: String?) =
                 AppTheme.entries.firstOrNull { it.title == value } ?: AppTheme.DARK
         }
+        val layout = box(UiChrome.layouts, settings.layout)
+        layout.converter = object : StringConverter<UiChrome>() {
+            override fun toString(value: UiChrome?) = value?.title ?: ""
+            override fun fromString(value: String?) =
+                UiChrome.layouts.firstOrNull { it.title == value } ?: UiChrome.WORD
+        }
+        val appearance = appearanceTab(settings, layout, theme, t, onIcons)
         val format = box(listOf("DOCX", "ODT"), settings.format)
         val paper = box(Paper.entries, settings.paper)
         paper.converter = object : StringConverter<Paper>() {
@@ -166,7 +208,8 @@ internal object SettingsDialog {
         val caret = caretTab(settings, t)
         tabs.tabs.addAll(
             tab("Интерфейс", "Размер интерфейса" to scale, "Шрифт интерфейса" to font,
-                "Размер шрифта" to fontSize, "Язык интерфейса" to language, "Тема" to theme),
+                "Размер шрифта" to fontSize, "Язык интерфейса" to language),
+            appearance,
             tab("Документ по умолчанию", "Формат нового файла" to format, "Размер страницы" to paper,
                 "Ориентация" to orientation, "Режим при открытии" to openMode),
             tab("Фикбук", "Ширина колонки превью" to previewWidth, "Раскладка ФФ" to placement),
@@ -185,8 +228,16 @@ internal object SettingsDialog {
         dialog.setOnHidden { caret.second.stop() }
         dialog.setResultConverter { it == apply }
         if (dialog.showAndWait().orElse(false) != true) return false
-        settings.scale = scale.value; settings.font = font.value.orEmpty(); settings.fontSize = fontSize.value
-        settings.language = if (language.value == "English") "en" else "ru"; settings.theme = theme.value
+        settings.scaleAuto = scale.value == 0
+        settings.scale = if (scale.value == 0) settings.scale else scale.value
+        settings.font = font.value.orEmpty(); settings.fontSize = fontSize.value
+        settings.language = if (language.value == "English") "en" else "ru"
+        settings.theme = theme.value
+        settings.layout = when {
+            settings.theme?.officeYear != null -> UiChrome.OPEN_OFFICE
+            settings.theme == AppTheme.MYOFFICE -> UiChrome.MY_OFFICE
+            else -> layout.value ?: settings.layout
+        }
         settings.format = format.value; settings.paper = paper.value
         settings.landscape = orientation.value == "Альбомная"; settings.openMode = openMode.value
         settings.previewWidth = previewWidth.value; settings.placement = placement.value
@@ -194,6 +245,89 @@ internal object SettingsDialog {
         caret.second.applyTo(settings)
         settings.save()
         return true
+    }
+
+    private fun appearanceTab(
+        settings: UiSettings,
+        layout: ComboBox<UiChrome>,
+        theme: ComboBox<AppTheme>,
+        t: (String) -> String,
+        onIcons: (IconSet) -> Unit
+    ): Tab {
+        val icons = ToggleGroup()
+        val standard = RadioButton(t("Стандартные")).apply {
+            toggleGroup = icons
+            isSelected = settings.iconSet == IconSet.STANDARD
+        }
+        val custom = RadioButton(t("Кастомные")).apply {
+            toggleGroup = icons
+            isSelected = settings.iconSet == IconSet.CUSTOM
+        }
+        val preview = HBox(8.0).apply { alignment = Pos.CENTER_LEFT }
+        val samples = listOf(
+            OfficeIconCatalog.ALIGN_LEFT to "⬅",
+            OfficeIconCatalog.ALIGN_CENTER to "⬌",
+            OfficeIconCatalog.ALIGN_RIGHT to "➡",
+            OfficeIconCatalog.ALIGN_JUSTIFY to "☰",
+            OfficeIconCatalog.BOLD to "Ж",
+            OfficeIconCatalog.ITALIC to "К",
+            OfficeIconCatalog.UNDERLINE to "Ч",
+            OfficeIconCatalog.SAVE to "▣"
+        )
+        fun paintPreview() {
+            val pack = Theme.pack(theme.value ?: AppTheme.DARK)
+            val card = HBox(8.0).apply {
+                alignment = Pos.CENTER_LEFT
+                padding = Insets(10.0, 12.0, 10.0, 12.0)
+                style = "-fx-background-color: ${pack.ribbonBg}; -fx-background-radius: 8; " +
+                    "-fx-border-color: ${pack.border}; -fx-border-radius: 8;"
+            }
+            val ink = runCatching { Color.web(pack.buttonFg) }.getOrDefault(Color.BLACK)
+            if (custom.isSelected) {
+                samples.forEach { (name, _) -> card.children += LucideIcons.glyph(name, 18.0, ink) }
+            } else {
+                samples.forEach { (_, mark) ->
+                    card.children += Label(mark).apply {
+                        style = "-fx-text-fill: ${pack.buttonFg}; -fx-font-size: 16px; -fx-font-family: 'Segoe UI Symbol';"
+                        minWidth = 18.0
+                        alignment = Pos.CENTER
+                    }
+                }
+            }
+            preview.children.setAll(card)
+        }
+        fun choose(set: IconSet) {
+            if (settings.iconSet == set) {
+                paintPreview()
+                return
+            }
+            settings.iconSet = set
+            settings.writeIconSet()
+            onIcons(set)
+            paintPreview()
+        }
+        icons.selectedToggleProperty().addListener { _, _, selected ->
+            if (selected == null) return@addListener
+            choose(if (selected == custom) IconSet.CUSTOM else IconSet.STANDARD)
+        }
+        theme.valueProperty().addListener { _, _, _ -> paintPreview() }
+        paintPreview()
+        val rows = VBox(
+            10.0,
+            Label(t("Раскладка")),
+            layout,
+            Label(t("Темы")),
+            theme,
+            Label(t("Светлая, Серая, Тёмная AMOLED и Стеклянная меняют только цвета выбранной раскладки. Годы Word оставляют свою ленту, годы OpenOffice — классические панели, МойОфис — свой вид.")).apply {
+                isWrapText = true
+            },
+            Label(t("Значки")),
+            standard,
+            custom,
+            preview,
+            Label(t("Значки сразу появляются на ленте и в меню и берут цвет из темы.")).apply { isWrapText = true }
+        ).apply { padding = Insets(20.0); prefWidth = 560.0 }
+        return Tab(t("Оформление"), rows).apply { isClosable = false }
     }
 
     private fun caretTab(settings: UiSettings, t: (String) -> String): Pair<Tab, CaretDraft> {

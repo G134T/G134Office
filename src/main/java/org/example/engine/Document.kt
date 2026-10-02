@@ -35,6 +35,12 @@ class Paragraph(
     var spacingAfterPt: Double = 0.0
     var lineSpacing: Double = 1.0
     var pageBreakBefore: Boolean = false
+    /** Keep this paragraph with the following paragraph when a page break is needed. */
+    var keepWithNext: Boolean = false
+    /** Do not split this paragraph across pages when it fits on one page. */
+    var keepTogether: Boolean = false
+    /** 0 — обычный текст, 1 и 2 — заголовки Word. */
+    var outlineLevel: Int = 0
     var text: String = text
         set(value) {
             field = value
@@ -63,27 +69,21 @@ data class ImageBlock(
 ) : DocumentBlock
 
 class Document {
-    val blocks: MutableList<DocumentBlock> = mutableListOf(Paragraph())
+    private val blockItems = BlockList().apply { add(Paragraph()) }
+    val blocks: MutableList<DocumentBlock> = blockItems
     val paragraphs: MutableList<Paragraph> = object : AbstractMutableList<Paragraph>() {
-        override val size: Int get() = blocks.count { it is Paragraph }
-        private fun blockIndex(index: Int): Int {
-            require(index in 0 until size)
-            var seen = 0
-            blocks.forEachIndexed { at, block ->
-                if (block is Paragraph && seen++ == index) return at
-            }
-            error("Paragraph index out of range")
-        }
-        override fun get(index: Int): Paragraph = blocks[blockIndex(index)] as Paragraph
+        override val size: Int get() = blockItems.paragraphCount
+        override fun get(index: Int): Paragraph = blockItems[blockItems.paragraphBlock(index)] as Paragraph
         override fun add(index: Int, element: Paragraph) {
             require(index in 0..size)
-            blocks.add(if (index == size) blocks.size else blockIndex(index), element)
+            blockItems.add(if (index == size) blockItems.size else blockItems.paragraphBlock(index), element)
         }
-        override fun removeAt(index: Int): Paragraph = blocks.removeAt(blockIndex(index)) as Paragraph
+        override fun removeAt(index: Int): Paragraph =
+            blockItems.removeAt(blockItems.paragraphBlock(index)) as Paragraph
         override fun set(index: Int, element: Paragraph): Paragraph {
-            val at = blockIndex(index)
-            val old = blocks[at] as Paragraph
-            blocks[at] = element
+            val at = blockItems.paragraphBlock(index)
+            val old = blockItems[at] as Paragraph
+            blockItems[at] = element
             return old
         }
     }
@@ -118,7 +118,43 @@ class Document {
         }
     }
 
-    fun toPlainText(): String = paragraphs.joinToString("\n") { it.text }
+    fun toPlainText(): String = buildString {
+        var first = true
+        for (block in blockItems) {
+            if (block !is Paragraph) continue
+            if (!first) append('\n')
+            first = false
+            append(block.text)
+        }
+    }
+
+    /** Line, word and character totals without building the joined document string. */
+    fun textStats(): TextStats {
+        var lines = 1
+        var words = 0
+        var chars = 0
+        var insideWord = false
+        var seenParagraph = false
+        for (block in blockItems) {
+            if (block !is Paragraph) continue
+            if (seenParagraph) {
+                chars++
+                lines++
+                insideWord = false
+            }
+            seenParagraph = true
+            for (ch in block.text) {
+                chars++
+                if (ch == '\n') lines++
+                if (ch.isWhitespace()) insideWord = false
+                else if (!insideWord) {
+                    words++
+                    insideWord = true
+                }
+            }
+        }
+        return TextStats(lines, words, chars)
+    }
 
     fun toExportText(): String = blocks.joinToString("\n") { block ->
         when (block) {
@@ -168,43 +204,63 @@ class Document {
         it.firstLineIndentPt = firstLineIndentPt
         it.spacingBeforePt = spacingBeforePt; it.spacingAfterPt = spacingAfterPt
         it.lineSpacing = lineSpacing; it.pageBreakBefore = pageBreakBefore
+        it.keepWithNext = keepWithNext; it.keepTogether = keepTogether
+        it.outlineLevel = outlineLevel
     }
 
     fun replaceRange(from: Int, to: Int, replacement: String) {
+        val parts = replacement.split('\n').map { line ->
+            if (line.isEmpty()) emptyList() else listOf(TextRun(line))
+        }
+        replaceParts(from, to, parts)
+    }
+
+    /** Replaces non-overlapping matches in the original text, retaining the first matched character's style. */
+    fun replaceRanges(ranges: List<IntRange>, replacement: String) {
+        val ordered = ranges.sortedBy { it.first }
+        val length = toPlainText().length
+        ordered.forEachIndexed { index, range ->
+            require(!range.isEmpty() && range.first >= 0 && range.last < length)
+            require(index == 0 || ordered[index - 1].last < range.first)
+        }
+        ordered.asReversed().forEach { range ->
+            val style = ParagraphFormatting.clipParts(this, range.first, range.last + 1)
+                .flatten().firstOrNull() ?: TextRun("")
+            replaceParts(range.first, range.last + 1, replacement.split('\n').map { line ->
+                if (line.isEmpty()) emptyList() else listOf(style.copy(text = line))
+            })
+        }
+    }
+
+    /** Replaces a plain-text span with styled paragraph fragments. One fragment is inline; further fragments are new paragraphs. */
+    fun replaceParts(from: Int, to: Int, parts: List<List<TextRun>>) {
         val text = toPlainText()
         val a = from.coerceIn(0, text.length)
         val b = to.coerceIn(a, text.length)
         fun locate(offset: Int): Pair<Int, Int> {
             var remaining = offset
-            paragraphs.forEachIndexed { index, paragraph ->
-                if (remaining <= paragraph.text.length) return index to remaining
-                remaining -= paragraph.text.length + 1
+            var index = 0
+            for (block in blockItems) {
+                if (block !is Paragraph) continue
+                if (remaining <= block.text.length) return index to remaining
+                remaining -= block.text.length + 1
+                index++
             }
-            return paragraphs.lastIndex to paragraphs.last().text.length
+            val last = paragraphs.lastOrNull()
+            return paragraphs.lastIndex.coerceAtLeast(0) to (last?.text?.length ?: 0)
         }
         val (startIndex, startChar) = locate(a)
         val (endIndex, endChar) = locate(b)
         val start = paragraphs[startIndex]
-        fun sliceRuns(paragraph: Paragraph, from: Int, to: Int): List<TextRun> {
-            var offset = 0
-            return paragraph.runs.mapNotNull { run ->
-                val begin = (from - offset).coerceIn(0, run.text.length)
-                val end = (to - offset).coerceIn(begin, run.text.length)
-                offset += run.text.length
-                run.copy(text = run.text.substring(begin, end)).takeIf { it.text.isNotEmpty() }
-            }
-        }
-        val before = sliceRuns(start, 0, startChar)
-        val after = sliceRuns(paragraphs[endIndex], endChar, paragraphs[endIndex].text.length)
+        val before = ParagraphFormatting.sliceRuns(start, 0, startChar)
+        val after = ParagraphFormatting.sliceRuns(paragraphs[endIndex], endChar, paragraphs[endIndex].text.length)
+        val chunks = parts.ifEmpty { listOf(emptyList()) }
         repeat(endIndex - startIndex) { paragraphs.removeAt(startIndex + 1) }
-        val lines = replacement.split('\n')
-        start.setRuns(before + TextRun(lines.first()).takeIf { it.text.isNotEmpty() }.let { listOfNotNull(it) } +
-            if (lines.size == 1) after else emptyList())
-        lines.drop(1).forEachIndexed { index, line ->
-            val paragraph = Paragraph("", start.align, start.fontFamily, start.fontSize, start.bold)
-            paragraph.setRuns(listOfNotNull(TextRun(line).takeIf { it.text.isNotEmpty() }) +
-                if (index == lines.size - 2) after else emptyList())
-            paragraphs.add(startIndex + 1 + index, paragraph)
+        start.setRuns(before + chunks.first() + if (chunks.size == 1) after else emptyList())
+        chunks.drop(1).forEachIndexed { index, runs ->
+            val paragraph = ParagraphFormatting.cloneProps(start)
+            paragraph.setRuns(runs + if (index == chunks.size - 2) after else emptyList())
+            insertParagraphAfter(startIndex + index, paragraph)
         }
     }
 
@@ -212,5 +268,61 @@ class Document {
         paragraphs.add(index.coerceIn(0, paragraphs.size), paragraph)
     }
 
+    /** Keeps new text beside its source paragraph, ahead of any following table or image. */
+    fun insertParagraphAfter(index: Int, paragraph: Paragraph) {
+        blockItems.add(blockItems.paragraphBlock(index) + 1, paragraph)
+    }
+
     companion object { fun fromText(raw: String) = Document().also { it.fromPlainText(raw) } }
+}
+
+data class TextStats(val lines: Int, val words: Int, val chars: Int)
+
+/** Block storage with an O(1) paragraph index. Structural edits rebuild the index once. */
+private class BlockList : AbstractMutableList<DocumentBlock>() {
+    private val items = ArrayList<DocumentBlock>()
+    private val paragraphBlocks = ArrayList<Int>()
+
+    val paragraphCount: Int get() = paragraphBlocks.size
+
+    fun paragraphBlock(index: Int): Int = paragraphBlocks[index]
+
+    private fun reindex() {
+        paragraphBlocks.clear()
+        items.forEachIndexed { index, block ->
+            if (block is Paragraph) paragraphBlocks += index
+        }
+    }
+
+    override val size: Int get() = items.size
+    override fun get(index: Int): DocumentBlock = items[index]
+
+    override fun add(index: Int, element: DocumentBlock) {
+        items.add(index, element)
+        reindex()
+    }
+
+    override fun addAll(index: Int, elements: Collection<DocumentBlock>): Boolean {
+        if (elements.isEmpty()) return false
+        items.addAll(index, elements)
+        reindex()
+        return true
+    }
+
+    override fun removeAt(index: Int): DocumentBlock {
+        val removed = items.removeAt(index)
+        reindex()
+        return removed
+    }
+
+    override fun set(index: Int, element: DocumentBlock): DocumentBlock {
+        val old = items.set(index, element)
+        reindex()
+        return old
+    }
+
+    override fun clear() {
+        items.clear()
+        paragraphBlocks.clear()
+    }
 }
