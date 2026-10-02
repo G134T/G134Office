@@ -147,19 +147,6 @@ void openPath(HWND window, const std::wstring& path)
     updateStatus();
 }
 
-void findNext(HWND window)
-{
-    if (g_find.empty()) {
-        wchar_t buf[256] = L"";
-        if (g_find.size() < 255) lstrcpynW(buf, g_find.c_str(), 256);
-        if (!InputBox) {}
-    }
-    wchar_t buf[256] = L"";
-    lstrcpynW(buf, g_find.c_str(), 256);
-    // fallback: simple prompt via a one-line dialog is below
-    (void)window;
-}
-
 INT_PTR CALLBACK findDlg(HWND dlg, UINT msg, WPARAM wparam, LPARAM)
 {
     if (msg == WM_COMMAND && (LOWORD(wparam) == IDOK || LOWORD(wparam) == IDCANCEL)) {
@@ -167,7 +154,7 @@ INT_PTR CALLBACK findDlg(HWND dlg, UINT msg, WPARAM wparam, LPARAM)
             wchar_t buf[256] = L"";
             GetDlgItemTextW(dlg, 200, buf, 256);
             g_find = buf;
-        } else g_find.clear();
+        }
         EndDialog(dlg, LOWORD(wparam));
         return TRUE;
     }
@@ -180,33 +167,33 @@ INT_PTR CALLBACK findDlg(HWND dlg, UINT msg, WPARAM wparam, LPARAM)
 
 bool askFind(HWND owner)
 {
-    // In-memory dialog template: label + edit + OK/Cancel.
     alignas(4) unsigned char mem[512]{};
     DLGTEMPLATE* dlg = reinterpret_cast<DLGTEMPLATE*>(mem);
     dlg->style = DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU;
     dlg->cdit = 4;
-    dlg->x = 0; dlg->y = 0; dlg->cx = 220; dlg->cy = 55;
+    dlg->cx = 220; dlg->cy = 55;
     WORD* p = reinterpret_cast<WORD*>(dlg + 1);
-    *p++ = 0; *p++ = 0; *p++ = 0;
+    *p++ = 0; *p++ = 0;
     const wchar_t* cap = L"Найти";
     while (*cap) *p++ = *cap++;
     *p++ = 0;
-    *p++ = 9; const wchar_t* font = L"Segoe UI";
+    *p++ = 9;
+    const wchar_t* font = L"Segoe UI";
     while (*font) *p++ = *font++;
     *p++ = 0;
-    auto item = [&](DWORD style, short x, short y, short cx, short cy, WORD id, const wchar_t* cls, const wchar_t* text) {
+    auto item = [&](DWORD style, short x, short y, short cx, short cy, WORD id, WORD klass, const wchar_t* text) {
         p = reinterpret_cast<WORD*>((reinterpret_cast<ULONG_PTR>(p) + 3) & ~3);
-        DLGITEMTEMPLATE* it = reinterpret_cast<DLGITEMTEMPLATE*>(p);
+        auto* it = reinterpret_cast<DLGITEMTEMPLATE*>(p);
         it->style = style; it->x = x; it->y = y; it->cx = cx; it->cy = cy; it->id = id;
         p = reinterpret_cast<WORD*>(it + 1);
-        *p++ = 0xFFFF; *p++ = cls[0] == L'B' ? 0x0080 : 0x0081;
+        *p++ = 0xFFFF; *p++ = klass;
         while (*text) *p++ = *text++;
         *p++ = 0; *p++ = 0;
     };
-    item(WS_CHILD | WS_VISIBLE, 8, 8, 40, 10, 0xFFFF, L"S", L"Строка");
-    item(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 50, 6, 160, 12, 200, L"E", L"");
-    item(WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 110, 32, 45, 14, IDOK, L"B", L"Найти");
-    item(WS_CHILD | WS_VISIBLE, 162, 32, 48, 14, IDCANCEL, L"B", L"Отмена");
+    item(WS_CHILD | WS_VISIBLE, 8, 8, 40, 10, static_cast<WORD>(-1), 0x0082, L"Строка");
+    item(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL | WS_TABSTOP, 50, 6, 160, 12, 200, 0x0081, L"");
+    item(WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON | WS_TABSTOP, 110, 32, 45, 14, IDOK, 0x0080, L"Найти");
+    item(WS_CHILD | WS_VISIBLE | WS_TABSTOP, 162, 32, 48, 14, IDCANCEL, 0x0080, L"Отмена");
     return DialogBoxIndirectParamW(GetModuleHandleW(nullptr), dlg, owner, findDlg, 0) == IDOK && !g_find.empty();
 }
 
@@ -216,8 +203,7 @@ void doFind(HWND window)
     std::wstring text = readEdit();
     DWORD start = 0, end = 0;
     SendMessageW(g_edit, EM_GETSEL, reinterpret_cast<WPARAM>(&start), reinterpret_cast<LPARAM>(&end));
-    size_t from = end;
-    size_t at = text.find(g_find, from);
+    size_t at = text.find(g_find, end);
     if (at == std::wstring::npos) at = text.find(g_find);
     if (at == std::wstring::npos) {
         MessageBoxW(window, L"Не найдено.", L"G134Office Lite", MB_OK);
@@ -314,12 +300,8 @@ LRESULT CALLBACK proc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
             if (!path.empty()) openPath(window, path);
             return 0;
         }
-        case ID_SAVE:
-            saveTo(window, g_path.empty() ? pick(window, true) : g_path);
-            return 0;
-        case ID_SAVEAS:
-            saveTo(window, pick(window, true));
-            return 0;
+        case ID_SAVE: saveTo(window, g_path.empty() ? pick(window, true) : g_path); return 0;
+        case ID_SAVEAS: saveTo(window, pick(window, true)); return 0;
         case ID_EXIT: SendMessageW(window, WM_CLOSE, 0, 0); return 0;
         case ID_UNDO: SendMessageW(g_edit, WM_UNDO, 0, 0); return 0;
         case ID_CUT: SendMessageW(g_edit, WM_CUT, 0, 0); return 0;
@@ -350,7 +332,7 @@ LRESULT CALLBACK proc(HWND window, UINT msg, WPARAM wparam, LPARAM lparam)
     return DefWindowProcW(window, msg, wparam, lparam);
 }
 
-} // namespace
+}
 
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR cmd, int show)
 {
