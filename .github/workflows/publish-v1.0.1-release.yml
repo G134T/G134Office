@@ -1,0 +1,137 @@
+name: Publish G134Office v1.0.1 release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-v1.0.1-release.yml"
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+      SIGNPATH_ORGANIZATION_ID: 55cc375f-6d2c-403b-a8b6-88c80191aeb6
+      SIGNPATH_PROJECT_SLUG: 906e50d7-31fb-4951-8b02-f49461c4718f
+      SIGNPATH_POLICY_SLUG: d4f25173-55f4-4ba4-b733-d64192be40f6
+      SIGNPATH_ARTIFACT_CONFIG_SLUG: d7dda586-5a47-4c2f-9d0b-df9931767a6b
+
+    steps:
+      - name: Check out v1.0.1
+        uses: actions/checkout@v5
+        with:
+          ref: v1.0.1
+          fetch-depth: 0
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "26"
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: |
+          choco install innosetup --yes --no-progress
+          $iscc = @(
+            "$env:ProgramFiles\Inno Setup 7\ISCC.exe",
+            "${env:ProgramFiles(x86)}\Inno Setup 7\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if (-not $iscc) { throw "ISCC.exe was not found." }
+          [System.IO.File]::AppendAllText($env:GITHUB_ENV, "INNO_SETUP_HOME=$(Split-Path -Parent $iscc)`n")
+
+      - name: Run tests
+        shell: cmd
+        run: .\gradlew.bat test --no-daemon
+
+      - name: Build application image
+        shell: cmd
+        run: .\build-release.cmd
+
+      - name: Build installer
+        shell: cmd
+        run: .\build-installer.cmd
+
+      - name: Upload unsigned installer for SignPath
+        id: upload-unsigned
+        uses: actions/upload-artifact@v7
+        with:
+          name: G134Office-Setup-1.0.1-unsigned
+          path: build/installer/G134Office-Setup-1.0.1.exe
+          archive: false
+          if-no-files-found: error
+
+      - name: Sign installer with SignPath
+        id: signpath
+        if: env.SIGNPATH_API_TOKEN != ''
+        continue-on-error: true
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ env.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ env.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ env.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ env.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ env.SIGNPATH_ARTIFACT_CONFIG_SLUG }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          connector-url: https://pipelineconnector.connectors.signpath.io/GitHub/GitHubCom
+          wait-for-completion: true
+          skip-decompress: true
+          output-artifact-directory: signed
+
+      - name: Select release installer
+        id: asset
+        shell: powershell
+        run: |
+          $unsigned = Join-Path $PWD 'build\installer\G134Office-Setup-1.0.1.exe'
+          $signed = Join-Path $PWD 'signed\G134Office-Setup-1.0.1.exe'
+          if (Test-Path -LiteralPath $signed) {
+            $sig = Get-AuthenticodeSignature -LiteralPath $signed
+            if ($sig.Status -eq 'Valid') {
+              Copy-Item -LiteralPath $signed -Destination (Join-Path $PWD 'G134Office-Setup-1.0.1.exe') -Force
+              "signed=true" >> $env:GITHUB_OUTPUT
+              exit 0
+            }
+          }
+          Copy-Item -LiteralPath $unsigned -Destination (Join-Path $PWD 'G134Office-Setup-1.0.1.exe') -Force
+          "signed=false" >> $env:GITHUB_OUTPUT
+
+      - name: Write release notes
+        shell: powershell
+        run: |
+          @'
+          ## G134Office v1.0.1
+
+          Обновление стабильности, сборки и выпуска Windows-версии G134Office.
+
+          ### Что изменилось
+          - обновлён релизный CI для GitHub Actions;
+          - подготовлена интеграция подписи через SignPath;
+          - обновлены GitHub Actions до актуальных версий;
+          - улучшена проверка и публикация Windows-установщика;
+          - версия приложения и установщика синхронизирована как 1.0.1.
+
+          ### Установка
+          Скачайте `G134Office-Setup-1.0.1.exe` из Assets и запустите установщик.
+
+          ### Системные требования
+          - Windows 10/11 x64;
+          - отдельная установка Java не требуется, runtime включён в приложение.
+          '@ | Set-Content -LiteralPath RELEASE_NOTES.md -Encoding UTF8
+
+      - name: Publish GitHub Release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v1.0.1 `
+            "G134Office-Setup-1.0.1.exe" `
+            --repo "${{ github.repository }}" `
+            --title "G134Office v1.0.1" `
+            --notes-file RELEASE_NOTES.md `
+            --verify-tag
