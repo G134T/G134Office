@@ -24,10 +24,35 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up JDK 26
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "26"
+          java-package: jdk+jmods
+
+      - name: Require JDK JMODs
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $javaHome = $env:JAVA_HOME
+          if ($javaHome -match '\+') {
+            $dest = "C:\jdk-26"
+            if (Test-Path -LiteralPath $dest) { Remove-Item -LiteralPath $dest -Recurse -Force }
+            New-Item -ItemType Directory -Path $dest | Out-Null
+            & robocopy $javaHome $dest /E /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+            if ($LASTEXITCODE -ge 8) { throw "Could not copy the JDK to a path without '+': $dest" }
+            $javaHome = $dest
+            [System.IO.File]::AppendAllText($env:GITHUB_ENV, "JAVA_HOME=$javaHome`n")
+            [System.IO.File]::AppendAllText($env:GITHUB_PATH, "$javaHome\bin`n")
+          }
+          $jmod = Join-Path $javaHome "jmods\java.base.jmod"
+          if (-not (Test-Path -LiteralPath $jmod)) {
+            throw "JDK JMODs were not installed: $jmod"
+          }
+          $normalized = $javaHome.Replace("\", "/")
+          $props = "`r`norg.gradle.java.installations.auto-detect=false`r`norg.gradle.java.installations.auto-download=false`r`norg.gradle.java.installations.paths=$normalized`r`n"
+          [System.IO.File]::AppendAllText((Join-Path (Get-Location) "gradle.properties"), $props)
+          Write-Host "jlink will use $jmod"
 
       - name: Install Inno Setup
         shell: powershell
