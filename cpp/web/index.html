@@ -3,57 +3,89 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f7f8fa">
+<meta name="theme-color" content="#f7f8fa" id="themeMeta">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>G134Office Lite</title>
 <style>
-  :root { --desk:#e7ebf0; --bar:#f7f8fa; --line:#d5dbe3; --ink:#1a1a1a; --safe-b: env(safe-area-inset-bottom); }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body { display: flex; flex-direction: column; background: var(--desk); color: var(--ink); font-family: "Segoe UI", system-ui, sans-serif; }
-  header { position: sticky; top: 0; z-index: 2; background: var(--bar); border-bottom: 1px solid var(--line); }
-  .row { display: flex; gap: 8px; align-items: center; padding: 8px 10px; }
-  .tools { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
-  button, select, input { font: 16px "Segoe UI", system-ui, sans-serif; }
-  button, select { min-height: 40px; background: #fff; border: 1px solid #c5ccd6; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
-  button.on { background: #d9e7f7; border-color: #8eb0d4; }
-  #q { width: 140px; min-height: 40px; padding: 6px 8px; border: 1px solid #c5ccd6; border-radius: 8px; }
-  #name { margin-left: auto; color: #52606d; font-size: 14px; max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  main { flex: 1; overflow: auto; padding: 12px 8px calc(18px + var(--safe-b)); }
-  .sheet { width: min(794px, 100%); min-height: 70vh; margin: 0 auto; background: #fff; box-shadow: 0 6px 22px rgba(20,30,40,.16); border-radius: 2px; }
-  #page { min-height: 70vh; padding: 22px 16px 48px; outline: none; font: 17px/1.5 Calibri, "Segoe UI", sans-serif; }
-  #page:empty:before { content: "Начните писать или перетащите файл"; color: #9aa3ad; }
-  #pdf { display: none; width: 100%; height: calc(100vh - 150px); border: 0; background: #fff; }
-  body.pdf .sheet { display: none; }
-  body.pdf #pdf { display: block; }
-  body.pdf #tools { display: none; }
-  footer { padding: 8px 12px calc(8px + var(--safe-b)); background: var(--bar); border-top: 1px solid var(--line); color: #52606d; font-size: 13px; }
-  #menu { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 5; }
-  #menu.open { display: block; }
-  #menu .panel { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 16px 16px 0 0; padding: 12px 12px calc(16px + var(--safe-b)); display: grid; gap: 8px; }
-  #menu h2 { margin: 4px 8px 8px; font-size: 16px; }
-  @media (min-width: 900px) {
-    .sheet { min-height: 1123px; }
-    #page { min-height: 1123px; padding: 72px 76px; }
-    main { padding: 28px 12px 48px; }
+  :root {
+    --desk:#e7ebf0; --bar:#f7f8fa; --line:#d5dbe3; --ink:#1a1a1a;
+    --muted:#52606d; --paper:#fff; --button:#fff; --button-hover:#eef3f8;
+    --accent:#d9e7f7; --accent-line:#8eb0d4; --shadow:rgba(20,30,40,.16);
+    --safe-b:env(safe-area-inset-bottom);
+  }
+  body[data-theme="dark"] {
+    --desk:#17191d; --bar:#22252b; --line:#343943; --ink:#e9edf2;
+    --muted:#aeb7c2; --paper:#262a31; --button:#2e333b; --button-hover:#3a414c;
+    --accent:#294766; --accent-line:#5484b5; --shadow:rgba(0,0,0,.42);
+  }
+  body[data-theme="sepia"] {
+    --desk:#e7dfcf; --bar:#f4ecdc; --line:#d3c4a7; --ink:#403729;
+    --muted:#746550; --paper:#fff8e8; --button:#fffaf0; --button-hover:#efe3ca;
+    --accent:#ead7ad; --accent-line:#b99b62; --shadow:rgba(70,50,20,.18);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; }
+  body { display:flex; flex-direction:column; background:var(--desk); color:var(--ink); font-family:"Segoe UI",system-ui,sans-serif; transition:background .18s,color .18s; }
+  header { position:sticky; top:0; z-index:2; background:var(--bar); border-bottom:1px solid var(--line); }
+  .row { display:flex; gap:8px; align-items:center; padding:8px 10px; }
+  .tools { overflow-x:auto; -webkit-overflow-scrolling:touch; white-space:nowrap; }
+  button,select,input { font:14px "Segoe UI",system-ui,sans-serif; color:var(--ink); }
+  button,select { min-height:36px; background:var(--button); border:1px solid var(--line); border-radius:8px; padding:5px 10px; cursor:pointer; }
+  button:hover { background:var(--button-hover); }
+  button.on { background:var(--accent); border-color:var(--accent-line); }
+  #q { width:140px; min-height:36px; padding:5px 8px; color:var(--ink); background:var(--button); border:1px solid var(--line); border-radius:8px; }
+  #name { margin-left:auto; color:var(--muted); font-size:13px; max-width:32vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #engine { font-size:12px; color:var(--muted); white-space:nowrap; }
+  main { flex:1; overflow:auto; padding:18px 8px calc(24px + var(--safe-b)); }
+  .sheet { width:min(794px,100%); min-height:70vh; margin:0 auto; background:var(--paper); box-shadow:0 8px 28px var(--shadow); border-radius:3px; transform-origin:top center; }
+  #page { min-height:70vh; padding:28px 24px 56px; outline:none; font:17px/1.55 Calibri,"Segoe UI",sans-serif; color:var(--ink); overflow-wrap:anywhere; }
+  #page.no-wrap { white-space:pre; overflow-wrap:normal; overflow-x:auto; }
+  #page:empty:before { content:"Начните писать или перетащите файл"; color:var(--muted); opacity:.65; }
+  #pdf { display:none; width:100%; height:calc(100vh - 150px); border:0; background:#fff; }
+  body.pdf .sheet { display:none; }
+  body.pdf #pdf { display:block; }
+  body.pdf #tools { display:none; }
+  body.focus header .row:first-child, body.focus footer { display:none; }
+  body.focus header { border:0; }
+  footer { padding:8px 12px calc(8px + var(--safe-b)); background:var(--bar); border-top:1px solid var(--line); color:var(--muted); font-size:12px; display:flex; gap:14px; flex-wrap:wrap; }
+  #menu { position:fixed; inset:0; background:rgba(0,0,0,.38); display:none; z-index:5; }
+  #menu.open { display:block; }
+  #menu .panel { position:absolute; left:0; right:0; bottom:0; background:var(--bar); border-radius:16px 16px 0 0; padding:12px 12px calc(16px + var(--safe-b)); display:grid; gap:8px; }
+  #menu h2 { margin:4px 8px 8px; font-size:16px; }
+  .spacer { flex:1; }
+  @media (min-width:900px) {
+    .sheet { min-height:1123px; }
+    #page { min-height:1123px; padding:72px 76px; }
+    main { padding:28px 12px 48px; }
+    #menu .panel { left:auto; width:340px; top:64px; bottom:auto; right:12px; border-radius:12px; }
   }
   @media print {
-    header, footer, #pdf, #menu { display: none !important; }
-    main { padding: 0; background: #fff; }
-    .sheet { box-shadow: none; width: auto; display: block !important; }
+    header,footer,#pdf,#menu { display:none !important; }
+    main { padding:0; background:#fff; overflow:visible; }
+    .sheet { box-shadow:none; width:auto; transform:none !important; display:block !important; background:#fff; }
+    #page { color:#000; }
   }
 </style>
 </head>
-<body>
+<body data-theme="light">
 <header>
   <div class="row">
     <button id="modeDoc" class="on" type="button">Документ</button>
     <button id="modePdf" type="button">PDF</button>
     <button id="open" type="button">Открыть</button>
     <button id="saveBtn" type="button">Сохранить</button>
+    <button id="focusBtn" type="button">Фокус</button>
+    <button id="fullBtn" type="button">Полный экран</button>
+    <span id="engine">C++: загрузка…</span>
     <span id="name">без имени</span>
   </div>
   <div class="row tools" id="tools">
+    <select id="theme" title="Тема">
+      <option value="system">Системная тема</option>
+      <option value="light">Светлая</option>
+      <option value="dark">Тёмная</option>
+      <option value="sepia">Сепия</option>
+    </select>
     <select id="font"><option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option></select>
     <select id="size"><option>14</option><option selected>17</option><option>20</option><option>24</option><option>28</option></select>
     <button data-cmd="bold" type="button"><b>B</b></button>
@@ -64,15 +96,23 @@
     <button data-cmd="justifyRight" type="button">Право</button>
     <button data-cmd="insertUnorderedList" type="button">Список</button>
     <button id="undo" type="button">Отмена</button>
+    <button id="wrapBtn" class="on" type="button">Перенос</button>
+    <button id="zoomOut" type="button">−</button>
+    <button id="zoomReset" type="button">100%</button>
+    <button id="zoomIn" type="button">+</button>
     <input id="q" placeholder="Найти">
     <button id="find" type="button">Найти</button>
   </div>
 </header>
 <main>
-  <div class="sheet"><div id="page" contenteditable="true"></div></div>
+  <div class="sheet"><div id="page" contenteditable="true" spellcheck="true"></div></div>
   <iframe id="pdf" title="PDF"></iframe>
 </main>
-<footer id="status">Документ · файл остаётся в браузере</footer>
+<footer>
+  <span id="status">Документ</span>
+  <span id="cursor">Стр 1 · Стлб 1</span>
+  <span id="autosave">Автосохранение включено</span>
+</footer>
 <div id="menu">
   <div class="panel">
     <h2>Сохранить как</h2>
@@ -86,27 +126,64 @@
     <button id="closeMenu" type="button">Закрыть</button>
   </div>
 </div>
-<input id="file" type="file" accept=".txt,.html,.md,.doc,.pdf,text/plain,text/html,application/pdf" hidden>
+<input id="file" type="file" accept=".txt,.html,.htm,.md,.doc,.pdf,text/plain,text/html,application/pdf" hidden>
+<script src="g134lite.js"></script>
 <script>
 const page = document.getElementById('page');
+const sheet = document.querySelector('.sheet');
 const pdf = document.getElementById('pdf');
 const status = document.getElementById('status');
+const cursor = document.getElementById('cursor');
+const autosaveEl = document.getElementById('autosave');
 const nameEl = document.getElementById('name');
 const menu = document.getElementById('menu');
-let fileName = 'без имени', dirty = false, pdfUrl = '';
+const engineEl = document.getElementById('engine');
+const themeSelect = document.getElementById('theme');
+const wrapBtn = document.getElementById('wrapBtn');
+const zoomReset = document.getElementById('zoomReset');
+let fileName = 'без имени', dirty = false, pdfUrl = '', zoom = 100, wrap = true, wasm = null, saveTimer = 0;
+const DRAFT_KEY = 'g134office-lite-draft-v2';
+const PREF_KEY = 'g134office-lite-prefs-v2';
+
 function mark() {
   document.title = 'G134Office Lite — ' + fileName + (dirty ? ' *' : '');
   nameEl.textContent = fileName + (dirty ? ' *' : '');
 }
-function words() {
+function jsWords(text) { const t = text.trim(); return t ? t.split(/\s+/u).length : 0; }
+function stats(text) {
+  if (wasm) {
+    return {
+      words: wasm.ccall('g134_word_count','number',['string'],[text]),
+      chars: wasm.ccall('g134_char_count','number',['string'],[text]),
+      lines: wasm.ccall('g134_line_count','number',['string'],[text]),
+      seconds: wasm.ccall('g134_reading_seconds','number',['string'],[text])
+    };
+  }
+  return { words:jsWords(text), chars:[...text].length, lines:(text.match(/\n/g)||[]).length+1, seconds:Math.ceil(jsWords(text)*60/200) };
+}
+function updateStatus() {
+  if (document.body.classList.contains('pdf')) return;
   const text = page.innerText || '';
-  return text.trim() ? text.trim().split(/\s+/).length : 0;
+  const s = stats(text);
+  const mins = s.seconds < 60 ? '<1 мин' : Math.ceil(s.seconds/60) + ' мин';
+  status.textContent = `Документ · слов ${s.words} · знаков ${s.chars} · строк ${s.lines} · чтение ${mins}`;
+}
+function updateCursor() {
+  const sel = getSelection();
+  if (!sel || !sel.rangeCount || !page.contains(sel.anchorNode)) return;
+  const range = document.createRange();
+  range.selectNodeContents(page);
+  range.setEnd(sel.anchorNode, sel.anchorOffset);
+  const before = range.toString();
+  const lines = before.split('\n');
+  const selected = sel.toString().length;
+  cursor.textContent = `Стр ${lines.length} · Стлб ${lines[lines.length-1].length+1}` + (selected ? ` · выделено ${selected}` : '');
 }
 function showDoc() {
   document.body.classList.remove('pdf');
   document.getElementById('modeDoc').classList.add('on');
   document.getElementById('modePdf').classList.remove('on');
-  status.textContent = 'Документ · слов ' + words();
+  updateStatus();
 }
 function showPdf() {
   document.body.classList.add('pdf');
@@ -114,78 +191,133 @@ function showPdf() {
   document.getElementById('modeDoc').classList.remove('on');
   status.textContent = pdfUrl ? 'PDF открыт просмотром браузера' : 'PDF не открыт';
 }
-function baseName() {
-  return fileName.replace(/\.[^.]+$/, '') || 'document';
-}
-function download(name, mime, data) {
-  const blob = data instanceof Blob ? data : new Blob([data], {type: mime});
+function baseName() { return fileName.replace(/\.[^.]+$/, '') || 'document'; }
+function download(name,mime,data) {
+  const blob = data instanceof Blob ? data : new Blob([data],{type:mime});
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  dirty = false;
-  fileName = name;
-  mark();
+  a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+  dirty = false; fileName = name; mark(); saveDraft(true);
 }
-function wordHtml() {
-  return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"></head><body>' + page.innerHTML + '</body></html>';
+function wordHtml() { return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"></head><body>' + page.innerHTML + '</body></html>'; }
+function markdown() { return (page.innerText || '').replace(/\u00a0/g,' '); }
+function savePrefs() { localStorage.setItem(PREF_KEY, JSON.stringify({theme:themeSelect.value,zoom,wrap})); }
+function saveDraft(immediate=false) {
+  clearTimeout(saveTimer);
+  const run = () => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({html:page.innerHTML,fileName,ts:Date.now()}));
+    autosaveEl.textContent = 'Сохранено локально · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  };
+  if (immediate) run(); else saveTimer = setTimeout(run,700);
 }
-function markdown() {
-  return (page.innerText || '').replace(/\u00a0/g, ' ');
+function restoreDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if (d && d.html) { page.innerHTML = d.html; fileName = d.fileName || 'авточерновик'; dirty = false; }
+  } catch {}
+}
+function applyTheme(value) {
+  let actual = value;
+  if (value === 'system') actual = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.body.dataset.theme = actual;
+  document.getElementById('themeMeta').content = actual === 'dark' ? '#22252b' : actual === 'sepia' ? '#f4ecdc' : '#f7f8fa';
+  savePrefs();
+}
+function applyZoom(value) {
+  zoom = Math.min(160,Math.max(60,value));
+  sheet.style.transform = `scale(${zoom/100})`;
+  sheet.style.marginBottom = `${Math.max(0,(zoom-100)*8)}px`;
+  zoomReset.textContent = zoom + '%';
+  savePrefs();
+}
+function applyWrap(value) {
+  wrap = value; page.classList.toggle('no-wrap',!wrap); wrapBtn.classList.toggle('on',wrap); savePrefs();
+}
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PREF_KEY) || '{}');
+    themeSelect.value = p.theme || 'system'; applyTheme(themeSelect.value); applyZoom(Number(p.zoom)||100); applyWrap(p.wrap !== false);
+  } catch { applyTheme('system'); }
 }
 function openPdf(file) {
   if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-  pdfUrl = URL.createObjectURL(file);
-  pdf.src = pdfUrl;
-  fileName = file.name;
-  dirty = false;
-  mark();
-  showPdf();
+  pdfUrl = URL.createObjectURL(file); pdf.src = pdfUrl; fileName = file.name; dirty = false; mark(); showPdf();
 }
 async function openAny(file) {
   if (!file) return;
   if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { openPdf(file); return; }
   const text = await file.text();
   if (/\.(html|htm|doc)$/i.test(file.name)) page.innerHTML = text; else page.innerText = text;
-  fileName = file.name; dirty = false; mark(); showDoc();
+  fileName = file.name; dirty = false; mark(); showDoc(); saveDraft(true);
 }
-page.addEventListener('input', () => { dirty = true; mark(); showDoc(); });
-document.querySelectorAll('[data-cmd]').forEach(btn => btn.onclick = () => { page.focus(); document.execCommand(btn.dataset.cmd); dirty = true; mark(); });
-document.getElementById('font').onchange = (e) => { page.focus(); document.execCommand('fontName', false, e.target.value); };
-document.getElementById('size').onchange = (e) => { page.focus(); document.execCommand('fontSize', false, '4'); page.querySelectorAll('font[size="4"]').forEach(n => { n.removeAttribute('size'); n.style.fontSize = e.target.value + 'px'; }); };
-document.getElementById('undo').onclick = () => document.execCommand('undo');
-document.getElementById('modeDoc').onclick = showDoc;
-document.getElementById('modePdf').onclick = showPdf;
-document.getElementById('open').onclick = () => document.getElementById('file').click();
-document.getElementById('file').onchange = (e) => openAny(e.target.files[0]);
-document.getElementById('saveBtn').onclick = () => menu.classList.add('open');
-document.getElementById('closeMenu').onclick = () => menu.classList.remove('open');
-menu.onclick = (e) => { if (e.target === menu) menu.classList.remove('open'); };
-document.querySelectorAll('[data-save]').forEach(btn => btn.onclick = async () => {
-  const kind = btn.dataset.save;
-  menu.classList.remove('open');
-  if (kind === 'txt') download(baseName() + '.txt', 'text/plain;charset=utf-8', page.innerText || '');
-  if (kind === 'html') download(baseName() + '.html', 'text/html;charset=utf-8', page.innerHTML);
-  if (kind === 'doc') download(baseName() + '.doc', 'application/msword', wordHtml());
-  if (kind === 'md') download(baseName() + '.md', 'text/markdown;charset=utf-8', markdown());
-  if (kind === 'pdf') { showDoc(); setTimeout(() => window.print(), 50); }
-  if (kind === 'share') {
-    const file = new File([page.innerText || ''], baseName() + '.txt', {type: 'text/plain'});
-    if (navigator.share) await navigator.share({title: fileName, files: [file]}).catch(() => navigator.share({title: fileName, text: page.innerText || ''}));
-    else status.textContent = 'На этом устройстве нет кнопки Поделиться';
+async function initWasm() {
+  try {
+    if (typeof G134LiteCore !== 'function') throw new Error('loader missing');
+    wasm = await G134LiteCore();
+    engineEl.textContent = 'C++ WASM: активен';
+    updateStatus();
+  } catch (e) {
+    engineEl.textContent = 'C++ WASM: JS fallback';
+    console.warn('G134Office Lite WASM fallback:', e);
+  }
+}
+
+page.addEventListener('input',()=>{ dirty=true; mark(); updateStatus(); updateCursor(); saveDraft(); });
+page.addEventListener('keyup',updateCursor);
+page.addEventListener('mouseup',updateCursor);
+document.querySelectorAll('[data-cmd]').forEach(btn=>btn.onclick=()=>{ page.focus(); document.execCommand(btn.dataset.cmd); dirty=true; mark(); updateStatus(); saveDraft(); });
+document.getElementById('font').onchange=e=>{ page.focus(); document.execCommand('fontName',false,e.target.value); saveDraft(); };
+document.getElementById('size').onchange=e=>{ page.focus(); document.execCommand('fontSize',false,'4'); page.querySelectorAll('font[size="4"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=e.target.value+'px';}); saveDraft(); };
+document.getElementById('undo').onclick=()=>document.execCommand('undo');
+document.getElementById('modeDoc').onclick=showDoc;
+document.getElementById('modePdf').onclick=showPdf;
+document.getElementById('open').onclick=()=>document.getElementById('file').click();
+document.getElementById('file').onchange=e=>openAny(e.target.files[0]);
+document.getElementById('saveBtn').onclick=()=>menu.classList.add('open');
+document.getElementById('closeMenu').onclick=()=>menu.classList.remove('open');
+menu.onclick=e=>{ if(e.target===menu) menu.classList.remove('open'); };
+themeSelect.onchange=e=>applyTheme(e.target.value);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ if(themeSelect.value==='system') applyTheme('system'); });
+wrapBtn.onclick=()=>applyWrap(!wrap);
+document.getElementById('zoomOut').onclick=()=>applyZoom(zoom-10);
+document.getElementById('zoomIn').onclick=()=>applyZoom(zoom+10);
+zoomReset.onclick=()=>applyZoom(100);
+document.getElementById('focusBtn').onclick=()=>{ document.body.classList.toggle('focus'); document.getElementById('focusBtn').classList.toggle('on'); };
+document.getElementById('fullBtn').onclick=async()=>{ if(!document.fullscreenElement) await document.documentElement.requestFullscreen?.(); else await document.exitFullscreen?.(); };
+document.querySelectorAll('[data-save]').forEach(btn=>btn.onclick=async()=>{
+  const kind=btn.dataset.save; menu.classList.remove('open');
+  if(kind==='txt') download(baseName()+'.txt','text/plain;charset=utf-8',page.innerText||'');
+  if(kind==='html') download(baseName()+'.html','text/html;charset=utf-8',page.innerHTML);
+  if(kind==='doc') download(baseName()+'.doc','application/msword',wordHtml());
+  if(kind==='md') download(baseName()+'.md','text/markdown;charset=utf-8',markdown());
+  if(kind==='pdf'){ showDoc(); setTimeout(()=>window.print(),50); }
+  if(kind==='share'){
+    const file=new File([page.innerText||''],baseName()+'.txt',{type:'text/plain'});
+    if(navigator.share) await navigator.share({title:fileName,files:[file]}).catch(()=>navigator.share({title:fileName,text:page.innerText||''}));
+    else autosaveEl.textContent='На этом устройстве нет функции «Поделиться»';
   }
 });
-document.getElementById('new').onclick = () => {
+document.getElementById('new').onclick=()=>{
   menu.classList.remove('open');
-  if (dirty && !confirm('Сбросить изменения?')) return;
-  page.innerHTML = ''; fileName = 'без имени'; dirty = false; mark(); showDoc();
+  if(dirty&&!confirm('Сбросить изменения?')) return;
+  page.innerHTML=''; fileName='без имени'; dirty=false; mark(); showDoc(); saveDraft(true);
 };
-document.getElementById('find').onclick = () => { const q = document.getElementById('q').value; if (q) window.find(q); };
-window.addEventListener('dragover', (e) => e.preventDefault());
-window.addEventListener('drop', (e) => { e.preventDefault(); openAny(e.dataTransfer.files[0]); });
-window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
-mark(); showDoc();
+document.getElementById('find').onclick=()=>{ const q=document.getElementById('q').value; if(q) window.find(q); };
+window.addEventListener('keydown',e=>{
+  if(!e.ctrlKey) return;
+  const k=e.key.toLowerCase();
+  if(k==='s'){e.preventDefault();menu.classList.add('open');}
+  if(k==='o'){e.preventDefault();document.getElementById('file').click();}
+  if(k==='n'){e.preventDefault();document.getElementById('new').click();}
+  if(k==='f'){e.preventDefault();document.getElementById('q').focus();}
+  if(k==='0'){e.preventDefault();applyZoom(100);}
+  if(k==='+'||k==='='){e.preventDefault();applyZoom(zoom+10);}
+  if(k==='-'){e.preventDefault();applyZoom(zoom-10);}
+});
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{e.preventDefault();openAny(e.dataTransfer.files[0]);});
+window.addEventListener('beforeunload',e=>{ if(dirty){ saveDraft(true); e.preventDefault(); } });
+
+restoreDraft(); loadPrefs(); mark(); showDoc(); updateCursor(); initWasm();
 </script>
 </body>
 </html>
