@@ -13,39 +13,40 @@
   .row { display: flex; gap: 6px; align-items: center; padding: 6px 10px; flex-wrap: wrap; }
   button, select, input { font: 13px "Segoe UI", sans-serif; }
   button, select { background: #fff; border: 1px solid #c5ccd6; border-radius: 4px; padding: 5px 9px; cursor: pointer; }
-  button:hover, select:hover { background: #eef3f8; }
-  button.active { background: #d9e7f7; border-color: #8eb0d4; }
-  #q { width: 160px; padding: 5px 8px; border: 1px solid #c5ccd6; border-radius: 4px; }
+  button:hover { background: #eef3f8; }
+  button.on { background: #d9e7f7; border-color: #8eb0d4; }
+  #q { width: 150px; padding: 5px 8px; border: 1px solid #c5ccd6; border-radius: 4px; }
   #name { margin-left: auto; color: #52606d; }
-  main { flex: 1; overflow: auto; padding: 28px 12px 48px; }
+  main { flex: 1; overflow: auto; padding: 24px 12px 40px; }
   .sheet { width: 794px; min-height: 1123px; margin: 0 auto; background: #fff; box-shadow: 0 10px 30px rgba(20,30,40,.22); }
   #page { min-height: 1123px; padding: 72px 76px; outline: none; font: 16px/1.45 Calibri, "Segoe UI", sans-serif; }
-  #page:empty:before { content: "Начните писать"; color: #9aa3ad; }
+  #page:empty:before { content: "Начните писать или перетащите файл"; color: #9aa3ad; }
+  #pdf { display: none; width: min(980px, 100%); height: calc(100vh - 150px); margin: 0 auto; background: #fff; border: 0; box-shadow: 0 10px 30px rgba(20,30,40,.22); }
+  body.pdf main { padding: 12px; }
+  body.pdf .sheet { display: none; }
+  body.pdf #pdf { display: block; }
   footer { padding: 6px 12px; background: var(--bar); border-top: 1px solid var(--line); color: #52606d; font-size: 13px; }
   @media print {
-    header, footer, main { background: #fff; }
-    header, footer { display: none; }
-    main { padding: 0; overflow: visible; }
-    .sheet { box-shadow: none; width: auto; }
+    header, footer, #pdf { display: none !important; }
+    main { padding: 0; background: #fff; }
+    .sheet { box-shadow: none; width: auto; display: block !important; }
   }
 </style>
 </head>
 <body>
 <header>
   <div class="row">
+    <button id="modeDoc" class="on" type="button">Документ</button>
+    <button id="modePdf" type="button">PDF</button>
     <button id="new" type="button">Создать</button>
     <button id="open" type="button">Открыть</button>
-    <button id="save" type="button">Сохранить</button>
-    <button id="print" type="button">Печать</button>
+    <button id="save" type="button">Сохранить HTML</button>
+    <button id="topdf" type="button">Сохранить PDF</button>
     <span id="name">без имени</span>
   </div>
-  <div class="row">
-    <select id="font">
-      <option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option>
-    </select>
-    <select id="size">
-      <option>12</option><option>14</option><option selected>16</option><option>18</option><option>22</option><option>28</option>
-    </select>
+  <div class="row" id="tools">
+    <select id="font"><option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option></select>
+    <select id="size"><option>12</option><option>14</option><option selected>16</option><option>18</option><option>22</option><option>28</option></select>
     <button data-cmd="bold" type="button"><b>B</b></button>
     <button data-cmd="italic" type="button"><i>I</i></button>
     <button data-cmd="underline" type="button"><u>U</u></button>
@@ -54,51 +55,70 @@
     <button data-cmd="justifyRight" type="button">Право</button>
     <button data-cmd="insertUnorderedList" type="button">Список</button>
     <button id="undo" type="button">Отменить</button>
-    <button id="redo" type="button">Вернуть</button>
     <input id="q" placeholder="Найти">
     <button id="find" type="button">Найти</button>
   </div>
 </header>
-<main><div class="sheet"><div id="page" contenteditable="true"></div></div></main>
-<footer id="status">Строка 1 · слов 0 · A4</footer>
-<input id="file" type="file" accept=".txt,.html,text/plain,text/html" hidden>
+<main>
+  <div class="sheet"><div id="page" contenteditable="true"></div></div>
+  <iframe id="pdf" title="PDF"></iframe>
+</main>
+<footer id="status">Документ · A4 · файл остаётся в браузере</footer>
+<input id="file" type="file" accept=".txt,.html,.pdf,text/plain,text/html,application/pdf" hidden>
 <script>
 const page = document.getElementById('page');
+const pdf = document.getElementById('pdf');
 const status = document.getElementById('status');
 const nameEl = document.getElementById('name');
-let fileName = 'без имени', dirty = false;
+let fileName = 'без имени', dirty = false, pdfUrl = '';
 function mark() {
   document.title = 'G134Office Lite — ' + fileName + (dirty ? ' *' : '');
   nameEl.textContent = fileName + (dirty ? ' *' : '');
 }
-function place() {
+function showDoc() {
+  document.body.classList.remove('pdf');
+  document.getElementById('modeDoc').classList.add('on');
+  document.getElementById('modePdf').classList.remove('on');
+  document.getElementById('tools').style.display = '';
   const text = page.innerText || '';
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  status.textContent = 'Строк ' + text.split('\n').length + ' · слов ' + words + ' · знаков ' + text.length + ' · A4';
+  status.textContent = 'Документ · слов ' + (text.trim() ? text.trim().split(/\s+/).length : 0) + ' · A4';
 }
-page.addEventListener('input', () => { dirty = true; mark(); place(); });
-page.addEventListener('keyup', place);
-page.addEventListener('click', place);
-document.querySelectorAll('[data-cmd]').forEach(btn => btn.onclick = () => {
-  page.focus();
-  document.execCommand(btn.dataset.cmd, false, null);
-  dirty = true; mark();
-});
-document.getElementById('font').onchange = (e) => { page.focus(); document.execCommand('fontName', false, e.target.value); dirty = true; mark(); };
-document.getElementById('size').onchange = (e) => { page.focus(); document.execCommand('fontSize', false, '4'); page.querySelectorAll('font[size="4"]').forEach(n => { n.removeAttribute('size'); n.style.fontSize = e.target.value + 'px'; }); dirty = true; mark(); };
+function showPdf() {
+  document.body.classList.add('pdf');
+  document.getElementById('modePdf').classList.add('on');
+  document.getElementById('modeDoc').classList.remove('on');
+  document.getElementById('tools').style.display = 'none';
+  status.textContent = pdfUrl ? 'PDF открыт встроенным просмотром браузера' : 'PDF не открыт';
+}
+function openPdf(file) {
+  if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+  pdfUrl = URL.createObjectURL(file);
+  pdf.src = pdfUrl;
+  fileName = file.name;
+  dirty = false;
+  mark();
+  showPdf();
+}
+async function openAny(file) {
+  if (!file) return;
+  if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) { openPdf(file); return; }
+  const text = await file.text();
+  if (file.name.toLowerCase().endsWith('.html')) page.innerHTML = text; else page.innerText = text;
+  fileName = file.name; dirty = false; mark(); showDoc();
+}
+page.addEventListener('input', () => { dirty = true; mark(); showDoc(); });
+document.querySelectorAll('[data-cmd]').forEach(btn => btn.onclick = () => { page.focus(); document.execCommand(btn.dataset.cmd); dirty = true; mark(); });
+document.getElementById('font').onchange = (e) => { page.focus(); document.execCommand('fontName', false, e.target.value); };
+document.getElementById('size').onchange = (e) => { page.focus(); document.execCommand('fontSize', false, '4'); page.querySelectorAll('font[size="4"]').forEach(n => { n.removeAttribute('size'); n.style.fontSize = e.target.value + 'px'; }); };
 document.getElementById('undo').onclick = () => document.execCommand('undo');
-document.getElementById('redo').onclick = () => document.execCommand('redo');
+document.getElementById('modeDoc').onclick = showDoc;
+document.getElementById('modePdf').onclick = showPdf;
 document.getElementById('new').onclick = () => {
   if (dirty && !confirm('Сбросить изменения?')) return;
-  page.innerHTML = ''; fileName = 'без имени'; dirty = false; mark(); place();
+  page.innerHTML = ''; fileName = 'без имени'; dirty = false; mark(); showDoc();
 };
 document.getElementById('open').onclick = () => document.getElementById('file').click();
-document.getElementById('file').onchange = async (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const text = await file.text();
-  if (file.name.endsWith('.html')) page.innerHTML = text; else page.innerText = text;
-  fileName = file.name; dirty = false; mark(); place();
-};
+document.getElementById('file').onchange = (e) => openAny(e.target.files[0]);
 document.getElementById('save').onclick = () => {
   const blob = new Blob([page.innerHTML], {type: 'text/html;charset=utf-8'});
   const a = document.createElement('a');
@@ -106,14 +126,12 @@ document.getElementById('save').onclick = () => {
   a.download = fileName.endsWith('.html') ? fileName : 'document.html';
   a.click(); URL.revokeObjectURL(a.href); dirty = false; mark();
 };
-document.getElementById('print').onclick = () => window.print();
-document.getElementById('find').onclick = () => {
-  const q = document.getElementById('q').value;
-  if (!q) return;
-  window.find(q);
-};
+document.getElementById('topdf').onclick = () => { showDoc(); setTimeout(() => window.print(), 50); };
+document.getElementById('find').onclick = () => { const q = document.getElementById('q').value; if (q) window.find(q); };
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('drop', (e) => { e.preventDefault(); openAny(e.dataTransfer.files[0]); });
 window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
-mark(); place();
+mark(); showDoc();
 </script>
 </body>
 </html>
