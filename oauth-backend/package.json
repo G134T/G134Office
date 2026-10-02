@@ -1,0 +1,9 @@
+{
+  "name": "g134office-oauth",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitHub OAuth backend for G134Office Lite",
+  "engines": {
+    "node": ">=20"
+  }
+}
