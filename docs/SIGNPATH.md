@@ -1,75 +1,34 @@
-# Подготовка G134Office к SignPath Foundation
+# SignPath — G134Office
 
-Статус: подготовка заявки. Одобрение SignPath и доверенная подпись пока не получены.
+Статус: исходники Java/Kotlin/JavaFX и Windows-workflow уже в `main`.
+Одобрение SignPath Foundation ещё не получено. Подписи нет.
 
-## Что нужно сверить с опубликованным репозиторием
+Репозиторий: https://github.com/G134T/G134Office
+Лицензия: MIT.
+Сборка: `.github/workflows/build.yml` на `windows-latest`.
 
-- Адрес GitHub: https://github.com/G134T/G134Office
-- В опубликованном репозитории уже есть MIT-лицензия.
-- Важно: опубликованный `main` сейчас содержит C++/CMake-заготовку с одним
-  `main.cpp`, а локальное приложение из этой рабочей папки — Java/Kotlin/JavaFX.
-  SignPath должен получить именно репозиторий, из которого собирается EXE;
-  иначе происхождение подписанного артефакта не совпадёт с исходниками.
-- В опубликованном репозитории пока нет GitHub Actions, Windows-релиза и
-  документации по готовому EXE.
-- Опубликованный релиз Windows с описанием возможностей и инструкцией запуска.
-- Учётные записи автора, проверяющего изменения и утверждающего выпуск;
-  включённая двухфакторная аутентификация.
-- Сборка из исходников на GitHub-hosted runner. Сейчас доступна локальная
-  сборка `build-release.cmd`, но workflow в этой копии отсутствует.
+## Что уже есть
 
-## Границы подписи
+- `build.gradle.kts`, `src/main`, `g134.ico`, `G134Office.iss`.
+- C++-заготовка лежит в `cpp/`, релиз её не собирает.
+- CI ставит Temurin 26, Inno Setup, гоняет `gradlew build`, `build-release.cmd`, `build-installer.cmd`.
+- Неподписанный Setup кладётся в artifact `G134Office-Setup-unsigned`.
+- Шаг SignPath не валит сборку, если секретов нет или сервис отказал.
 
-Приложение использует JavaFX, JVM и другие сторонние нативные библиотеки.
-Неподписанная JavaFX glass.dll уже блокировалась Smart App Control.
-Подпись установщика не заменяет подписи загружаемых DLL.
+## Что не подписывать
 
-По условиям Foundation нельзя подписывать сторонние DLL сертификатом проекта.
-Нужны подписанные сборки от поставщиков. Отдельно следует согласовать с SignPath
-подпись EXE, созданного jpackage, и установщика Inno Setup: загрузчики генерируются
-сторонними инструментами, поэтому право на подпись нельзя считать подтверждённым.
+`glass.dll`, `prism_*.dll` и прочие DLL JavaFX / JVM — чужие.
+Сертификат проекта на них вешать нельзя. Именно неподписанная `glass.dll` уже блокировалась Smart App Control (CodeIntegrity 3033/3077, CreateProcess 4551).
 
-## Черновик обращения — не отправлен
+Конфиг в `docs/signpath-artifact.xml` подписывает только `G134Office-Setup-*.exe`.
 
-Subject: G134Office — eligibility for SignPath Foundation
+## Секреты репозитория, после одобрения
 
-Hello,
+- `SIGNPATH_API_TOKEN`
+- `SIGNPATH_ORGANIZATION_ID`
+- `SIGNPATH_PROJECT_SLUG`
+- `SIGNPATH_POLICY_SLUG`
+- `SIGNPATH_ARTIFACT_CONFIG_SLUG` — slug конфига из `docs/signpath-artifact.xml`
 
-I am an individual developer residing in Russia and the maintainer of G134Office,
-a Windows desktop document and PDF editor written in Java/Kotlin with JavaFX.
-I would like to check eligibility for the SignPath Foundation program before
-configuring the integration.
-
-Could you confirm whether you can accept a project maintained by an individual
-resident of Russia, and whether a jpackage-generated application launcher and an
-Inno Setup installer qualify for signing under your own-binaries policy?
-
-The distribution includes third-party JavaFX and JVM DLLs. I understand that
-these cannot simply be signed using the project's Foundation certificate and
-that signed upstream builds need to be obtained separately.
-
-The public repository is https://github.com/G134T/G134Office and currently has
-an MIT license. Note that the repository's current main branch is a small
-C++/CMake scaffold; the Java/Kotlin/JavaFX application is currently in a
-separate local working tree. I need to confirm whether SignPath can accept the
-repository after the application source and reproducible Windows workflow are
-published there.
-
-## Дальнейшая интеграция после одобрения
-
-1. Согласовать лицензию и зависимости, опубликовать сведения о конфиденциальности.
-   Описать веб-режим Ficbook и импорт его cookie из локальных браузеров по действию
-   пользователя; не заявлять, что приложение вообще не работает с сетью или сессиями.
-2. Добавить Code signing policy с реальными участниками. Указывать поддержку
-   SignPath как полученную можно только после одобрения.
-3. Подключить репозиторий в SignPath и настроить проверяемую сборку GitHub Actions.
-4. После сборки загрузить артефакт в GitHub Actions, запросить подпись согласованных
-   файлов через SignPath, получить и проверить результат. Секрет API хранить
-   в GitHub Actions Secrets, не в исходниках.
-5. Проверить конечный дистрибутив с включённым Smart App Control, включая DLL.
-
-## Официальные источники
-
-- Условия: https://signpath.org/terms.html
-- Заявка: https://signpath.org/apply.html
-- Интеграция GitHub: https://docs.signpath.io/trusted-build-systems/github
+Заявка: https://signpath.io/product/open-source
+Условия: https://signpath.org/terms.html

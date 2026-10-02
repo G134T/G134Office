@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <pe-file-set>
+    <include path="**/G134Office-Setup-*.exe" min-matches="1" max-matches="1" />
+    <for-each>
+      <authenticode-sign />
+    </for-each>
+  </pe-file-set>
+</artifact-configuration>
