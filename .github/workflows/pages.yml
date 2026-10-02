@@ -85,6 +85,10 @@ jobs:
           test -s cpp/web/index.html
           test -s cpp/web/app.css
           test -s cpp/web/editor.js
+          test -s cpp/web/font-size-control.css
+          test -s cpp/web/font-size-control.js
+          test -s cpp/web/word-layout.css
+          test -s cpp/web/word-layout.js
           test -s cpp/web/manifest.webmanifest
           test -s cpp/web/app-icon.svg
           test -s cpp/web/g134lite.js
@@ -92,12 +96,16 @@ jobs:
           test -s cpp/web/oauth-config.js
           test -s cpp/web/github-account.js
           node --check cpp/web/editor.js
+          node --check cpp/web/font-size-control.js
+          node --check cpp/web/word-layout.js
           grep -q 'G134_GITHUB_ACCOUNT' cpp/web/index.html
           grep -q 'editor.js' cpp/web/index.html
+          grep -q 'word-layout.js' cpp/web/index.html
+          grep -q 'word-layout.css' cpp/web/index.html
           grep -q 'app.css' cpp/web/index.html
           ! grep -Fq 'function printPdf()' cpp/web/index.html
           ! grep -Fq '<script>onload=()=>setTimeout(()=>print(),150)' cpp/web/index.html
-          ls -lh cpp/web/index.html cpp/web/app.css cpp/web/editor.js cpp/web/g134lite.js cpp/web/g134lite.wasm
+          ls -lh cpp/web/index.html cpp/web/app.css cpp/web/editor.js cpp/web/word-layout.css cpp/web/word-layout.js cpp/web/g134lite.js cpp/web/g134lite.wasm
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
