@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - cpp/CMakeLists.txt
       - cpp/web/**
       - .github/workflows/pages.yml
   workflow_dispatch:
@@ -27,25 +28,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Install Emscripten
+      - name: Install Emscripten and CMake
         run: |
           sudo apt-get update
-          sudo apt-get install -y emscripten
+          sudo apt-get install -y emscripten cmake
           em++ --version
+          cmake --version
 
       - name: Build C++ WebAssembly core
         shell: bash
         run: |
-          em++ cpp/web/wasm/lite_core.cpp \
-            -std=c++20 \
-            -O3 \
-            -sWASM=1 \
-            -sMODULARIZE=1 \
-            -sEXPORT_NAME=G134LiteCore \
-            -sALLOW_MEMORY_GROWTH=1 \
-            -sEXPORTED_FUNCTIONS='["_g134_word_count","_g134_char_count","_g134_line_count","_g134_reading_seconds","_g134_nonspace_char_count","_g134_is_empty"]' \
-            -sEXPORTED_RUNTIME_METHODS='["ccall"]' \
-            -o cpp/web/g134lite.js
+          emcmake cmake -S cpp -B build/wasm -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/wasm --config Release --target G134OfficeLiteCore
 
       - name: Verify web bundle
         shell: bash
