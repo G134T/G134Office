@@ -6,8 +6,7 @@
   <meta name="theme-color" content="#f7f8fa" id="themeMeta">
   <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="description" content="G134Office Lite — лёгкий редактор документов с C++ WebAssembly, DOCX, ODT, RTF, TXT и PDF.">
+  <meta name="description" content="G134Office Lite — редактор без входа. DOCX, ODT, RTF, TXT и PDF сохраняются на устройстве.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="app-icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="app.css?v=20261002-1">
@@ -18,126 +17,64 @@
 <body data-theme="light" data-layout="desktop">
   <header class="app-header">
     <div class="top-row row">
-      <div class="brand" aria-label="G134Office Lite">
-        <span class="brand-mark" aria-hidden="true">G</span>
-        <span class="brand-copy"><strong>G134Office</strong><small>Lite</small></span>
-      </div>
-      <div class="primary-actions" role="group" aria-label="Файл">
-        <button id="new" type="button" title="Новый документ (Ctrl+N)">Новый</button>
-        <button id="open" type="button" title="Открыть файл (Ctrl+O)">Открыть</button>
-        <button id="saveBtn" class="primary" type="button" title="Сохранить (Ctrl+S)">Сохранить</button>
+      <div class="brand"><span class="brand-mark">G</span><span class="brand-copy"><strong>G134Office</strong><small>Lite</small></span></div>
+      <div class="primary-actions">
+        <button id="new" type="button">Новый</button>
+        <button id="open" type="button">Открыть</button>
+        <button id="saveBtn" class="primary" type="button">Сохранить</button>
       </div>
       <div class="spacer"></div>
-      <span id="engine" class="engine-pill">C++: загрузка…</span>
+      <span id="engine" class="engine-pill">Локально</span>
       <span id="name" class="file-name">без имени</span>
     </div>
-
     <div class="view-row row" id="layoutRow">
       <span class="row-label">Вид</span>
       <label class="auto-check"><input id="autoLayout" type="checkbox" checked> Авто</label>
-      <div class="segmented" role="group" aria-label="Режим отображения">
-        <button type="button" data-layout-mode="phone" aria-label="Телефон">📱 <span>Телефон</span></button>
-        <button type="button" data-layout-mode="tablet" aria-label="Планшет">▣ <span>Планшет</span></button>
-        <button type="button" data-layout-mode="desktop" aria-label="Компьютер">🖥 <span>ПК</span></button>
+      <div class="segmented">
+        <button type="button" data-layout-mode="phone">Телефон</button>
+        <button type="button" data-layout-mode="tablet">Планшет</button>
+        <button type="button" data-layout-mode="desktop">ПК</button>
       </div>
-      <span id="deviceState" class="device-state">Определение устройства…</span>
+      <span id="deviceState" class="device-state">Можно писать без входа</span>
       <div class="spacer"></div>
       <button id="focusBtn" type="button">Фокус</button>
       <button id="fullBtn" type="button">Полный экран</button>
     </div>
-
-    <div class="format-row row" id="tools" aria-label="Форматирование">
-      <select id="theme" title="Тема интерфейса" aria-label="Тема">
-        <option value="system">Системная тема</option>
-        <option value="light">Светлая</option>
-        <option value="dark">Тёмная</option>
-        <option value="sepia">Сепия</option>
-      </select>
-      <select id="blockStyle" title="Стиль абзаца" aria-label="Стиль абзаца">
-        <option value="p">Обычный</option>
-        <option value="h1">Заголовок 1</option>
-        <option value="h2">Заголовок 2</option>
-        <option value="blockquote">Цитата</option>
-      </select>
-      <select id="font" title="Шрифт" aria-label="Шрифт">
-        <option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option>
-      </select>
-      <div class="font-size-group" role="group" aria-label="Размер шрифта">
-        <button id="fontSizeDown" type="button" title="Уменьшить размер шрифта" aria-label="Уменьшить размер шрифта">−</button>
-        <input id="size" type="number" min="8" max="96" step="1" value="17" inputmode="numeric" title="Размер шрифта от 8 до 96 px" aria-label="Размер шрифта">
-        <button id="fontSizeUp" type="button" title="Увеличить размер шрифта" aria-label="Увеличить размер шрифта">+</button>
-        <span class="font-unit" aria-hidden="true">px</span>
-      </div>
-      <span class="tool-divider" aria-hidden="true"></span>
-      <button data-cmd="bold" type="button" class="icon-btn" title="Жирный (Ctrl+B)"><b>B</b></button>
-      <button data-cmd="italic" type="button" class="icon-btn" title="Курсив (Ctrl+I)"><i>I</i></button>
-      <button data-cmd="underline" type="button" class="icon-btn" title="Подчёркивание (Ctrl+U)"><u>U</u></button>
-      <button id="clearFormat" type="button" class="icon-btn" title="Очистить форматирование">Tx</button>
-      <span class="tool-divider" aria-hidden="true"></span>
-      <button data-cmd="justifyLeft" type="button" class="icon-btn" title="По левому краю">⇤</button>
-      <button data-cmd="justifyCenter" type="button" class="icon-btn" title="По центру">≡</button>
-      <button data-cmd="justifyRight" type="button" class="icon-btn" title="По правому краю">⇥</button>
-      <button data-cmd="insertUnorderedList" type="button" title="Маркированный список">• Список</button>
-      <button data-cmd="insertOrderedList" type="button" title="Нумерованный список">1. Список</button>
-      <span class="tool-divider" aria-hidden="true"></span>
-      <button id="undo" type="button" class="icon-btn" title="Отменить (Ctrl+Z)">↶</button>
-      <button id="redo" type="button" class="icon-btn" title="Повторить (Ctrl+Y)">↷</button>
+    <div class="format-row row" id="tools">
+      <select id="theme"><option value="system">Системная тема</option><option value="light">Светлая</option><option value="dark">Тёмная</option><option value="sepia">Сепия</option></select>
+      <select id="blockStyle"><option value="p">Обычный</option><option value="h1">Заголовок 1</option><option value="h2">Заголовок 2</option><option value="blockquote">Цитата</option></select>
+      <select id="font"><option>Calibri</option><option>Times New Roman</option><option>Georgia</option><option>Segoe UI</option><option>Consolas</option></select>
+      <div class="font-size-group"><button id="fontSizeDown" type="button">−</button><input id="size" type="number" min="8" max="96" value="17"><button id="fontSizeUp" type="button">+</button></div>
+      <button data-cmd="bold" type="button"><b>B</b></button>
+      <button data-cmd="italic" type="button"><i>I</i></button>
+      <button data-cmd="underline" type="button"><u>U</u></button>
+      <button id="clearFormat" type="button">Tx</button>
+      <button data-cmd="justifyLeft" type="button">Лево</button>
+      <button data-cmd="justifyCenter" type="button">Центр</button>
+      <button data-cmd="justifyRight" type="button">Право</button>
+      <button data-cmd="insertUnorderedList" type="button">Список</button>
+      <button id="undo" type="button">Отмена</button>
+      <button id="redo" type="button">Вернуть</button>
       <button id="wrapBtn" class="on" type="button">Перенос</button>
-      <div class="zoom-group" role="group" aria-label="Масштаб">
-        <button id="zoomOut" type="button" aria-label="Уменьшить масштаб">−</button>
-        <button id="zoomReset" type="button">100%</button>
-        <button id="zoomIn" type="button" aria-label="Увеличить масштаб">+</button>
-      </div>
-      <details class="search-box" id="searchBox">
-        <summary>Найти</summary>
-        <div class="search-popover">
-          <input id="q" placeholder="Найти" autocomplete="off">
-          <input id="replaceText" placeholder="Заменить на" autocomplete="off">
-          <div class="search-actions">
-            <button id="find" type="button">Далее</button>
-            <button id="replaceOne" type="button">Заменить</button>
-            <button id="replaceAll" type="button">Заменить всё</button>
-          </div>
-        </div>
-      </details>
+      <button id="zoomOut" type="button">−</button>
+      <button id="zoomReset" type="button">100%</button>
+      <button id="zoomIn" type="button">+</button>
+      <input id="q" placeholder="Найти">
+      <button id="find" type="button">Найти</button>
+      <input id="replaceText" placeholder="Заменить">
+      <button id="replace" type="button">Заменить</button>
     </div>
   </header>
-
-  <main id="workspace">
-    <div class="sheet" id="sheet">
-      <div id="page" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Документ"></div>
-    </div>
-    <iframe id="pdf" title="Просмотр PDF"></iframe>
+  <main>
+    <div class="sheet" id="sheet"><div id="page" contenteditable="true" spellcheck="true" role="textbox" aria-label="Документ"></div></div>
+    <iframe id="pdf" title="PDF"></iframe>
   </main>
-
-  <footer class="status-bar">
-    <span id="status">Документ</span>
-    <span id="cursor">Стр 1 · Стлб 1</span>
-    <span id="autosave">Автосохранение включено</span>
-    <span id="layoutFooter">Вид: авто</span>
-  </footer>
-
-  <div id="saveDialog" class="modal" aria-hidden="true">
-    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
-      <div class="modal-head"><div><h2 id="saveTitle">Сохранить документ</h2><p>Выберите имя и настоящий формат файла.</p></div><button id="closeSave" type="button" class="icon-btn" aria-label="Закрыть">✕</button></div>
-      <label class="field"><span>Имя файла</span><input id="saveName" value="document"></label>
-      <div class="format-grid">
-        <button class="format-card" data-save="docx" type="button"><strong>DOCX</strong><span>Microsoft Word / Google Docs</span></button>
-        <button class="format-card" data-save="odt" type="button"><strong>ODT</strong><span>OpenDocument / LibreOffice</span></button>
-        <button class="format-card" data-save="rtf" type="button"><strong>RTF</strong><span>Rich Text с Unicode</span></button>
-        <button class="format-card" data-save="txt" type="button"><strong>TXT</strong><span>Обычный UTF-8 текст</span></button>
-        <button class="format-card" data-save="pdf" type="button"><strong>PDF</strong><span>Через системную печать в PDF</span></button>
-        <button class="format-card" data-save="share" type="button"><strong>Поделиться</strong><span>Отправить текст через меню устройства</span></button>
-      </div>
-      <p class="privacy-note">DOCX, ODT, RTF и TXT формируются локально в браузере. Текст документа не отправляется на сервер.</p>
-    </section>
-  </div>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <input id="file" type="file" accept=".txt,.html,.htm,.rtf,.docx,.odt,.pdf,text/plain,text/html,application/rtf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text" hidden>
-
+  <footer class="status-bar"><span id="status">Документ</span><span id="cursor">Стр 1</span><span id="autosave">Автосохранение включено</span><span id="layoutFooter">Вид: авто</span></footer>
+  <div id="saveDialog" class="modal" aria-hidden="true"><section class="modal-panel"><div class="modal-head"><div><h2 id="saveTitle">Сохранить документ</h2><p>Вход не нужен. Файл остаётся на устройстве.</p></div><button id="closeSave" type="button">✕</button></div><label class="field"><span>Имя файла</span><input id="saveName" value="document"></label><div class="format-grid"><button class="format-card" data-save="docx" type="button"><strong>DOCX</strong><span>Word</span></button><button class="format-card" data-save="odt" type="button"><strong>ODT</strong><span>OpenDocument</span></button><button class="format-card" data-save="rtf" type="button"><strong>RTF</strong><span>Rich Text</span></button><button class="format-card" data-save="txt" type="button"><strong>TXT</strong><span>UTF-8</span></button><button class="format-card" data-save="pdf" type="button"><strong>PDF</strong><span>Печать браузера</span></button><button class="format-card" data-save="share" type="button"><strong>Поделиться</strong><span>Меню устройства</span></button></div><p class="privacy-note">Текст не отправляется на сервер. GitHub — только если сами нажмёте Войти.</p></section></div>
+  <div id="toast" class="toast" role="status"></div>
+  <input id="file" type="file" hidden>
   <script src="g134lite.js?v=20261002-3"></script>
-  <script src="editor.js?v=20261002-1"></script>
+  <script src="editor.js?v=20261002-4"></script>
   <script src="font-size-control.js?v=20261002-1"></script>
   <script src="word-layout.js?v=20261002-1"></script>
   <script src="scroll-behavior.js?v=20261002-1"></script>
