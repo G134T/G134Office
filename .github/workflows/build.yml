@@ -26,9 +26,9 @@ jobs:
       - name: Set up JDK 26
         uses: actions/setup-java@v6
         with:
-          distribution: temurin
+          distribution: liberica
           java-version: "26"
-          java-package: jdk+jmods
+          java-package: jdk
 
       - name: Require JDK JMODs
         shell: powershell
