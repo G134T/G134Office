@@ -11,7 +11,7 @@
     --desk:#e7ebf0; --bar:#f7f8fa; --line:#d5dbe3; --ink:#1a1a1a;
     --muted:#52606d; --paper:#fff; --button:#fff; --button-hover:#eef3f8;
     --accent:#d9e7f7; --accent-line:#8eb0d4; --shadow:rgba(20,30,40,.16);
-    --safe-b:env(safe-area-inset-bottom);
+    --safe-t:env(safe-area-inset-top); --safe-b:env(safe-area-inset-bottom);
   }
   body[data-theme="dark"] {
     --desk:#17191d; --bar:#22252b; --line:#343943; --ink:#e9edf2;
@@ -26,7 +26,7 @@
   * { box-sizing:border-box; }
   html,body { margin:0; height:100%; }
   body { display:flex; flex-direction:column; background:var(--desk); color:var(--ink); font-family:"Segoe UI",system-ui,sans-serif; transition:background .18s,color .18s; }
-  header { position:sticky; top:0; z-index:2; background:var(--bar); border-bottom:1px solid var(--line); }
+  header { position:sticky; top:0; z-index:2; background:var(--bar); border-bottom:1px solid var(--line); padding-top:var(--safe-t); }
   .row { display:flex; gap:8px; align-items:center; padding:8px 10px; }
   .tools { overflow-x:auto; -webkit-overflow-scrolling:touch; white-space:nowrap; }
   button,select,input { font:14px "Segoe UI",system-ui,sans-serif; color:var(--ink); }
@@ -35,39 +35,74 @@
   button.on { background:var(--accent); border-color:var(--accent-line); }
   #q { width:140px; min-height:36px; padding:5px 8px; color:var(--ink); background:var(--button); border:1px solid var(--line); border-radius:8px; }
   #name { margin-left:auto; color:var(--muted); font-size:13px; max-width:32vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #engine { font-size:12px; color:var(--muted); white-space:nowrap; }
+  #engine,#deviceState { font-size:12px; color:var(--muted); white-space:nowrap; }
+  #layoutRow { border-top:1px solid var(--line); padding-top:6px; padding-bottom:6px; }
+  .layout-label { color:var(--muted); font-size:12px; font-weight:600; }
+  .layout-buttons { display:flex; gap:5px; }
+  .layout-buttons button { min-height:32px; padding:4px 9px; font-size:12px; }
+  .auto-check { display:inline-flex; align-items:center; gap:6px; padding:4px 7px; border:1px solid var(--line); border-radius:8px; background:var(--button); font-size:12px; cursor:pointer; white-space:nowrap; }
+  .auto-check input { accent-color:#3b82f6; }
   main { flex:1; overflow:auto; padding:18px 8px calc(24px + var(--safe-b)); }
   .sheet { width:min(794px,100%); min-height:70vh; margin:0 auto; background:var(--paper); box-shadow:0 8px 28px var(--shadow); border-radius:3px; transform-origin:top center; }
   #page { min-height:70vh; padding:28px 24px 56px; outline:none; font:17px/1.55 Calibri,"Segoe UI",sans-serif; color:var(--ink); overflow-wrap:anywhere; }
   #page.no-wrap { white-space:pre; overflow-wrap:normal; overflow-x:auto; }
   #page:empty:before { content:"Начните писать или перетащите файл"; color:var(--muted); opacity:.65; }
-  #pdf { display:none; width:100%; height:calc(100vh - 150px); border:0; background:#fff; }
+  #pdf { display:none; width:100%; height:calc(100vh - 170px); border:0; background:#fff; }
   body.pdf .sheet { display:none; }
   body.pdf #pdf { display:block; }
   body.pdf #tools { display:none; }
-  body.focus header .row:first-child, body.focus footer { display:none; }
+  body.focus header .row:first-child, body.focus #layoutRow, body.focus footer { display:none; }
   body.focus header { border:0; }
   footer { padding:8px 12px calc(8px + var(--safe-b)); background:var(--bar); border-top:1px solid var(--line); color:var(--muted); font-size:12px; display:flex; gap:14px; flex-wrap:wrap; }
   #menu { position:fixed; inset:0; background:rgba(0,0,0,.38); display:none; z-index:5; }
   #menu.open { display:block; }
   #menu .panel { position:absolute; left:0; right:0; bottom:0; background:var(--bar); border-radius:16px 16px 0 0; padding:12px 12px calc(16px + var(--safe-b)); display:grid; gap:8px; }
   #menu h2 { margin:4px 8px 8px; font-size:16px; }
-  .spacer { flex:1; }
-  @media (min-width:900px) {
-    .sheet { min-height:1123px; }
-    #page { min-height:1123px; padding:72px 76px; }
-    main { padding:28px 12px 48px; }
-    #menu .panel { left:auto; width:340px; top:64px; bottom:auto; right:12px; border-radius:12px; }
+
+  /* Телефон */
+  body[data-layout="phone"] header .row:first-child { gap:5px; padding:6px; }
+  body[data-layout="phone"] header .row:first-child button { min-height:38px; padding:5px 8px; font-size:12px; }
+  body[data-layout="phone"] #focusBtn, body[data-layout="phone"] #fullBtn, body[data-layout="phone"] #engine { display:none; }
+  body[data-layout="phone"] #name { max-width:28vw; font-size:11px; }
+  body[data-layout="phone"] #layoutRow { overflow-x:auto; flex-wrap:nowrap; gap:5px; padding:5px 6px; }
+  body[data-layout="phone"] .layout-label { display:none; }
+  body[data-layout="phone"] .layout-buttons button { min-width:64px; }
+  body[data-layout="phone"] #tools { padding:6px; gap:5px; }
+  body[data-layout="phone"] #tools button, body[data-layout="phone"] #tools select { min-height:40px; }
+  body[data-layout="phone"] #q { min-height:40px; width:110px; }
+  body[data-layout="phone"] main { padding:0 0 calc(12px + var(--safe-b)); }
+  body[data-layout="phone"] .sheet { width:100%; min-height:calc(100vh - 190px); border-radius:0; box-shadow:none; }
+  body[data-layout="phone"] #page { min-height:calc(100vh - 190px); padding:20px 14px 60px; font-size:17px; line-height:1.58; }
+  body[data-layout="phone"] footer { gap:8px; padding:6px 8px calc(7px + var(--safe-b)); font-size:11px; }
+  body[data-layout="phone"] #cursor { display:none; }
+  body[data-layout="phone"] #menu .panel { max-height:82vh; overflow:auto; }
+
+  /* Планшет */
+  body[data-layout="tablet"] .row { flex-wrap:wrap; }
+  body[data-layout="tablet"] #name { max-width:28vw; }
+  body[data-layout="tablet"] main { padding:18px 16px calc(24px + var(--safe-b)); }
+  body[data-layout="tablet"] .sheet { width:min(760px,100%); }
+  body[data-layout="tablet"] #page { padding:48px 48px 70px; font-size:17px; }
+  body[data-layout="tablet"] #layoutRow { padding-left:10px; }
+
+  /* Компьютер */
+  body[data-layout="desktop"] .sheet { min-height:1123px; width:794px; }
+  body[data-layout="desktop"] #page { min-height:1123px; padding:72px 76px; }
+  body[data-layout="desktop"] main { padding:28px 12px 48px; }
+  body[data-layout="desktop"] #menu .panel { left:auto; width:340px; top:64px; bottom:auto; right:12px; border-radius:12px; }
+
+  @media (max-width:430px) {
+    body[data-layout="auto"] main { padding:0; }
   }
   @media print {
     header,footer,#pdf,#menu { display:none !important; }
     main { padding:0; background:#fff; overflow:visible; }
-    .sheet { box-shadow:none; width:auto; transform:none !important; display:block !important; background:#fff; }
-    #page { color:#000; }
+    .sheet { box-shadow:none; width:auto !important; transform:none !important; display:block !important; background:#fff; }
+    #page { color:#000; min-height:auto !important; padding:20mm !important; }
   }
 </style>
 </head>
-<body data-theme="light">
+<body data-theme="light" data-layout="desktop">
 <header>
   <div class="row">
     <button id="modeDoc" class="on" type="button">Документ</button>
@@ -79,6 +114,18 @@
     <span id="engine">C++: загрузка…</span>
     <span id="name">без имени</span>
   </div>
+
+  <div class="row" id="layoutRow">
+    <span class="layout-label">Вид:</span>
+    <label class="auto-check"><input id="autoLayout" type="checkbox" checked> Авто</label>
+    <div class="layout-buttons" role="group" aria-label="Режим отображения">
+      <button type="button" data-layout-mode="phone">📱 Телефон</button>
+      <button type="button" data-layout-mode="tablet">▣ Планшет</button>
+      <button type="button" data-layout-mode="desktop">🖥 ПК</button>
+    </div>
+    <span id="deviceState">Определение устройства…</span>
+  </div>
+
   <div class="row tools" id="tools">
     <select id="theme" title="Тема">
       <option value="system">Системная тема</option>
@@ -112,6 +159,7 @@
   <span id="status">Документ</span>
   <span id="cursor">Стр 1 · Стлб 1</span>
   <span id="autosave">Автосохранение включено</span>
+  <span id="layoutFooter">Вид: авто</span>
 </footer>
 <div id="menu">
   <div class="panel">
@@ -141,183 +189,135 @@ const engineEl = document.getElementById('engine');
 const themeSelect = document.getElementById('theme');
 const wrapBtn = document.getElementById('wrapBtn');
 const zoomReset = document.getElementById('zoomReset');
-let fileName = 'без имени', dirty = false, pdfUrl = '', zoom = 100, wrap = true, wasm = null, saveTimer = 0;
-const DRAFT_KEY = 'g134office-lite-draft-v2';
-const PREF_KEY = 'g134office-lite-prefs-v2';
+const autoLayout = document.getElementById('autoLayout');
+const deviceState = document.getElementById('deviceState');
+const layoutFooter = document.getElementById('layoutFooter');
+const layoutButtons = [...document.querySelectorAll('[data-layout-mode]')];
+let fileName='без имени',dirty=false,pdfUrl='',zoom=100,wrap=true,wasm=null,saveTimer=0;
+let layoutMode='auto', detectedLayout='desktop';
+const DRAFT_KEY='g134office-lite-draft-v2';
+const PREF_KEY='g134office-lite-prefs-v3';
 
-function mark() {
-  document.title = 'G134Office Lite — ' + fileName + (dirty ? ' *' : '');
-  nameEl.textContent = fileName + (dirty ? ' *' : '');
+function mark(){
+  document.title='G134Office Lite — '+fileName+(dirty?' *':'');
+  nameEl.textContent=fileName+(dirty?' *':'');
 }
-function jsWords(text) { const t = text.trim(); return t ? t.split(/\s+/u).length : 0; }
-function stats(text) {
-  if (wasm) {
-    return {
-      words: wasm.ccall('g134_word_count','number',['string'],[text]),
-      chars: wasm.ccall('g134_char_count','number',['string'],[text]),
-      lines: wasm.ccall('g134_line_count','number',['string'],[text]),
-      seconds: wasm.ccall('g134_reading_seconds','number',['string'],[text])
-    };
-  }
-  return { words:jsWords(text), chars:[...text].length, lines:(text.match(/\n/g)||[]).length+1, seconds:Math.ceil(jsWords(text)*60/200) };
+function jsWords(text){const t=text.trim();return t?t.split(/\s+/u).length:0;}
+function stats(text){
+  if(wasm){return{
+    words:wasm.ccall('g134_word_count','number',['string'],[text]),
+    chars:wasm.ccall('g134_char_count','number',['string'],[text]),
+    lines:wasm.ccall('g134_line_count','number',['string'],[text]),
+    seconds:wasm.ccall('g134_reading_seconds','number',['string'],[text])
+  };}
+  return{words:jsWords(text),chars:[...text].length,lines:(text.match(/\n/g)||[]).length+1,seconds:Math.ceil(jsWords(text)*60/200)};
 }
-function updateStatus() {
-  if (document.body.classList.contains('pdf')) return;
-  const text = page.innerText || '';
-  const s = stats(text);
-  const mins = s.seconds < 60 ? '<1 мин' : Math.ceil(s.seconds/60) + ' мин';
-  status.textContent = `Документ · слов ${s.words} · знаков ${s.chars} · строк ${s.lines} · чтение ${mins}`;
+function updateStatus(){
+  if(document.body.classList.contains('pdf'))return;
+  const text=page.innerText||'';const s=stats(text);const mins=s.seconds<60?'<1 мин':Math.ceil(s.seconds/60)+' мин';
+  status.textContent=`Документ · слов ${s.words} · знаков ${s.chars} · строк ${s.lines} · чтение ${mins}`;
 }
-function updateCursor() {
-  const sel = getSelection();
-  if (!sel || !sel.rangeCount || !page.contains(sel.anchorNode)) return;
-  const range = document.createRange();
-  range.selectNodeContents(page);
-  range.setEnd(sel.anchorNode, sel.anchorOffset);
-  const before = range.toString();
-  const lines = before.split('\n');
-  const selected = sel.toString().length;
-  cursor.textContent = `Стр ${lines.length} · Стлб ${lines[lines.length-1].length+1}` + (selected ? ` · выделено ${selected}` : '');
+function updateCursor(){
+  const sel=getSelection();if(!sel||!sel.rangeCount||!page.contains(sel.anchorNode))return;
+  const range=document.createRange();range.selectNodeContents(page);range.setEnd(sel.anchorNode,sel.anchorOffset);
+  const before=range.toString();const lines=before.split('\n');const selected=sel.toString().length;
+  cursor.textContent=`Стр ${lines.length} · Стлб ${lines[lines.length-1].length+1}`+(selected?` · выделено ${selected}`:'');
 }
-function showDoc() {
-  document.body.classList.remove('pdf');
-  document.getElementById('modeDoc').classList.add('on');
-  document.getElementById('modePdf').classList.remove('on');
-  updateStatus();
+function showDoc(){document.body.classList.remove('pdf');document.getElementById('modeDoc').classList.add('on');document.getElementById('modePdf').classList.remove('on');updateStatus();}
+function showPdf(){document.body.classList.add('pdf');document.getElementById('modePdf').classList.add('on');document.getElementById('modeDoc').classList.remove('on');status.textContent=pdfUrl?'PDF открыт просмотром браузера':'PDF не открыт';}
+function baseName(){return fileName.replace(/\.[^.]+$/,'')||'document';}
+function download(name,mime,data){
+  const blob=data instanceof Blob?data:new Blob([data],{type:mime});const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href);dirty=false;fileName=name;mark();saveDraft(true);
 }
-function showPdf() {
-  document.body.classList.add('pdf');
-  document.getElementById('modePdf').classList.add('on');
-  document.getElementById('modeDoc').classList.remove('on');
-  status.textContent = pdfUrl ? 'PDF открыт просмотром браузера' : 'PDF не открыт';
-}
-function baseName() { return fileName.replace(/\.[^.]+$/, '') || 'document'; }
-function download(name,mime,data) {
-  const blob = data instanceof Blob ? data : new Blob([data],{type:mime});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href);
-  dirty = false; fileName = name; mark(); saveDraft(true);
-}
-function wordHtml() { return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"></head><body>' + page.innerHTML + '</body></html>'; }
-function markdown() { return (page.innerText || '').replace(/\u00a0/g,' '); }
-function savePrefs() { localStorage.setItem(PREF_KEY, JSON.stringify({theme:themeSelect.value,zoom,wrap})); }
-function saveDraft(immediate=false) {
-  clearTimeout(saveTimer);
-  const run = () => {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({html:page.innerHTML,fileName,ts:Date.now()}));
-    autosaveEl.textContent = 'Сохранено локально · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  };
-  if (immediate) run(); else saveTimer = setTimeout(run,700);
-}
-function restoreDraft() {
-  try {
-    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (d && d.html) { page.innerHTML = d.html; fileName = d.fileName || 'авточерновик'; dirty = false; }
-  } catch {}
-}
-function applyTheme(value) {
-  let actual = value;
-  if (value === 'system') actual = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  document.body.dataset.theme = actual;
-  document.getElementById('themeMeta').content = actual === 'dark' ? '#22252b' : actual === 'sepia' ? '#f4ecdc' : '#f7f8fa';
-  savePrefs();
-}
-function applyZoom(value) {
-  zoom = Math.min(160,Math.max(60,value));
-  sheet.style.transform = `scale(${zoom/100})`;
-  sheet.style.marginBottom = `${Math.max(0,(zoom-100)*8)}px`;
-  zoomReset.textContent = zoom + '%';
-  savePrefs();
-}
-function applyWrap(value) {
-  wrap = value; page.classList.toggle('no-wrap',!wrap); wrapBtn.classList.toggle('on',wrap); savePrefs();
-}
-function loadPrefs() {
-  try {
-    const p = JSON.parse(localStorage.getItem(PREF_KEY) || '{}');
-    themeSelect.value = p.theme || 'system'; applyTheme(themeSelect.value); applyZoom(Number(p.zoom)||100); applyWrap(p.wrap !== false);
-  } catch { applyTheme('system'); }
-}
-function openPdf(file) {
-  if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-  pdfUrl = URL.createObjectURL(file); pdf.src = pdfUrl; fileName = file.name; dirty = false; mark(); showPdf();
-}
-async function openAny(file) {
-  if (!file) return;
-  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) { openPdf(file); return; }
-  const text = await file.text();
-  if (/\.(html|htm|doc)$/i.test(file.name)) page.innerHTML = text; else page.innerText = text;
-  fileName = file.name; dirty = false; mark(); showDoc(); saveDraft(true);
-}
-async function initWasm() {
-  try {
-    if (typeof G134LiteCore !== 'function') throw new Error('loader missing');
-    wasm = await G134LiteCore();
-    engineEl.textContent = 'C++ WASM: активен';
-    updateStatus();
-  } catch (e) {
-    engineEl.textContent = 'C++ WASM: JS fallback';
-    console.warn('G134Office Lite WASM fallback:', e);
-  }
-}
+function wordHtml(){return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"></head><body>'+page.innerHTML+'</body></html>';}
+function markdown(){return(page.innerText||'').replace(/\u00a0/g,' ');}
 
-page.addEventListener('input',()=>{ dirty=true; mark(); updateStatus(); updateCursor(); saveDraft(); });
-page.addEventListener('keyup',updateCursor);
-page.addEventListener('mouseup',updateCursor);
-document.querySelectorAll('[data-cmd]').forEach(btn=>btn.onclick=()=>{ page.focus(); document.execCommand(btn.dataset.cmd); dirty=true; mark(); updateStatus(); saveDraft(); });
-document.getElementById('font').onchange=e=>{ page.focus(); document.execCommand('fontName',false,e.target.value); saveDraft(); };
-document.getElementById('size').onchange=e=>{ page.focus(); document.execCommand('fontSize',false,'4'); page.querySelectorAll('font[size="4"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=e.target.value+'px';}); saveDraft(); };
+function detectDeviceLayout(){
+  const w=Math.min(window.innerWidth||9999,screen.width||9999);
+  const h=Math.min(window.innerHeight||9999,screen.height||9999);
+  const coarse=matchMedia('(pointer: coarse)').matches;
+  const touch=(navigator.maxTouchPoints||0)>0;
+  const short=Math.min(w,h), long=Math.max(w,h);
+  if((coarse||touch)&&short<=600)return'phone';
+  if((coarse||touch)&&short<=1000&&long<=1400)return'tablet';
+  if(window.innerWidth<=620)return'phone';
+  if(window.innerWidth<=1024)return'tablet';
+  return'desktop';
+}
+function layoutTitle(mode){return mode==='phone'?'телефон':mode==='tablet'?'планшет':'компьютер';}
+function applyLayout(mode, persist=true){
+  detectedLayout=detectDeviceLayout();
+  layoutMode=mode==='auto'?'auto':mode;
+  const actual=layoutMode==='auto'?detectedLayout:layoutMode;
+  document.body.dataset.layout=actual;
+  autoLayout.checked=layoutMode==='auto';
+  layoutButtons.forEach(btn=>btn.classList.toggle('on',layoutMode!=='auto'&&btn.dataset.layoutMode===actual));
+  deviceState.textContent=`Устройство: ${layoutTitle(detectedLayout)} · ${layoutMode==='auto'?'авто':'вручную: '+layoutTitle(actual)}`;
+  layoutFooter.textContent=`Вид: ${layoutMode==='auto'?'авто → ':''}${layoutTitle(actual)}`;
+  if(persist)savePrefs();
+}
+function setManualLayout(mode){autoLayout.checked=false;applyLayout(mode);}
+function reevaluateLayout(){if(layoutMode==='auto')applyLayout('auto',false);}
+
+function savePrefs(){
+  localStorage.setItem(PREF_KEY,JSON.stringify({theme:themeSelect.value,zoom,wrap,layoutMode}));
+}
+function saveDraft(immediate=false){
+  clearTimeout(saveTimer);const run=()=>{localStorage.setItem(DRAFT_KEY,JSON.stringify({html:page.innerHTML,fileName,ts:Date.now()}));autosaveEl.textContent='Сохранено локально · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});};
+  if(immediate)run();else saveTimer=setTimeout(run,700);
+}
+function restoreDraft(){try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');if(d&&d.html){page.innerHTML=d.html;fileName=d.fileName||'авточерновик';dirty=false;}}catch{}}
+function applyTheme(value){
+  let actual=value;if(value==='system')actual=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  document.body.dataset.theme=actual;document.getElementById('themeMeta').content=actual==='dark'?'#22252b':actual==='sepia'?'#f4ecdc':'#f7f8fa';savePrefs();
+}
+function applyZoom(value){zoom=Math.min(160,Math.max(60,value));sheet.style.transform=`scale(${zoom/100})`;sheet.style.marginBottom=`${Math.max(0,(zoom-100)*8)}px`;zoomReset.textContent=zoom+'%';savePrefs();}
+function applyWrap(value){wrap=value;page.classList.toggle('no-wrap',!wrap);wrapBtn.classList.toggle('on',wrap);savePrefs();}
+function loadPrefs(){
+  try{
+    const p=JSON.parse(localStorage.getItem(PREF_KEY)||'{}');themeSelect.value=p.theme||'system';zoom=Number(p.zoom)||100;wrap=p.wrap!==false;layoutMode=p.layoutMode||'auto';
+    applyTheme(themeSelect.value);applyZoom(zoom);applyWrap(wrap);applyLayout(layoutMode,false);
+  }catch{themeSelect.value='system';applyTheme('system');applyLayout('auto',false);}
+}
+function openPdf(file){if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl=URL.createObjectURL(file);pdf.src=pdfUrl;fileName=file.name;dirty=false;mark();showPdf();}
+async function openAny(file){if(!file)return;if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){openPdf(file);return;}const text=await file.text();if(/\.(html|htm|doc)$/i.test(file.name))page.innerHTML=text;else page.innerText=text;fileName=file.name;dirty=false;mark();showDoc();saveDraft(true);}
+async function initWasm(){try{if(typeof G134LiteCore!=='function')throw new Error('loader missing');wasm=await G134LiteCore();engineEl.textContent='C++ WASM: активен';updateStatus();}catch(e){engineEl.textContent='C++ WASM: JS fallback';console.warn('G134Office Lite WASM fallback:',e);}}
+
+page.addEventListener('input',()=>{dirty=true;mark();updateStatus();updateCursor();saveDraft();});
+page.addEventListener('keyup',updateCursor);page.addEventListener('mouseup',updateCursor);
+document.querySelectorAll('[data-cmd]').forEach(btn=>btn.onclick=()=>{page.focus();document.execCommand(btn.dataset.cmd);dirty=true;mark();updateStatus();saveDraft();});
+document.getElementById('font').onchange=e=>{page.focus();document.execCommand('fontName',false,e.target.value);saveDraft();};
+document.getElementById('size').onchange=e=>{page.focus();document.execCommand('fontSize',false,'4');page.querySelectorAll('font[size="4"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=e.target.value+'px';});saveDraft();};
 document.getElementById('undo').onclick=()=>document.execCommand('undo');
-document.getElementById('modeDoc').onclick=showDoc;
-document.getElementById('modePdf').onclick=showPdf;
-document.getElementById('open').onclick=()=>document.getElementById('file').click();
-document.getElementById('file').onchange=e=>openAny(e.target.files[0]);
-document.getElementById('saveBtn').onclick=()=>menu.classList.add('open');
-document.getElementById('closeMenu').onclick=()=>menu.classList.remove('open');
-menu.onclick=e=>{ if(e.target===menu) menu.classList.remove('open'); };
-themeSelect.onchange=e=>applyTheme(e.target.value);
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ if(themeSelect.value==='system') applyTheme('system'); });
-wrapBtn.onclick=()=>applyWrap(!wrap);
-document.getElementById('zoomOut').onclick=()=>applyZoom(zoom-10);
-document.getElementById('zoomIn').onclick=()=>applyZoom(zoom+10);
-zoomReset.onclick=()=>applyZoom(100);
-document.getElementById('focusBtn').onclick=()=>{ document.body.classList.toggle('focus'); document.getElementById('focusBtn').classList.toggle('on'); };
-document.getElementById('fullBtn').onclick=async()=>{ if(!document.fullscreenElement) await document.documentElement.requestFullscreen?.(); else await document.exitFullscreen?.(); };
-document.querySelectorAll('[data-save]').forEach(btn=>btn.onclick=async()=>{
-  const kind=btn.dataset.save; menu.classList.remove('open');
-  if(kind==='txt') download(baseName()+'.txt','text/plain;charset=utf-8',page.innerText||'');
-  if(kind==='html') download(baseName()+'.html','text/html;charset=utf-8',page.innerHTML);
-  if(kind==='doc') download(baseName()+'.doc','application/msword',wordHtml());
-  if(kind==='md') download(baseName()+'.md','text/markdown;charset=utf-8',markdown());
-  if(kind==='pdf'){ showDoc(); setTimeout(()=>window.print(),50); }
-  if(kind==='share'){
-    const file=new File([page.innerText||''],baseName()+'.txt',{type:'text/plain'});
-    if(navigator.share) await navigator.share({title:fileName,files:[file]}).catch(()=>navigator.share({title:fileName,text:page.innerText||''}));
-    else autosaveEl.textContent='На этом устройстве нет функции «Поделиться»';
-  }
-});
-document.getElementById('new').onclick=()=>{
-  menu.classList.remove('open');
-  if(dirty&&!confirm('Сбросить изменения?')) return;
-  page.innerHTML=''; fileName='без имени'; dirty=false; mark(); showDoc(); saveDraft(true);
-};
-document.getElementById('find').onclick=()=>{ const q=document.getElementById('q').value; if(q) window.find(q); };
-window.addEventListener('keydown',e=>{
-  if(!e.ctrlKey) return;
-  const k=e.key.toLowerCase();
-  if(k==='s'){e.preventDefault();menu.classList.add('open');}
-  if(k==='o'){e.preventDefault();document.getElementById('file').click();}
-  if(k==='n'){e.preventDefault();document.getElementById('new').click();}
-  if(k==='f'){e.preventDefault();document.getElementById('q').focus();}
-  if(k==='0'){e.preventDefault();applyZoom(100);}
-  if(k==='+'||k==='='){e.preventDefault();applyZoom(zoom+10);}
-  if(k==='-'){e.preventDefault();applyZoom(zoom-10);}
-});
-window.addEventListener('dragover',e=>e.preventDefault());
-window.addEventListener('drop',e=>{e.preventDefault();openAny(e.dataTransfer.files[0]);});
-window.addEventListener('beforeunload',e=>{ if(dirty){ saveDraft(true); e.preventDefault(); } });
+document.getElementById('modeDoc').onclick=showDoc;document.getElementById('modePdf').onclick=showPdf;
+document.getElementById('open').onclick=()=>document.getElementById('file').click();document.getElementById('file').onchange=e=>openAny(e.target.files[0]);
+document.getElementById('saveBtn').onclick=()=>menu.classList.add('open');document.getElementById('closeMenu').onclick=()=>menu.classList.remove('open');menu.onclick=e=>{if(e.target===menu)menu.classList.remove('open');};
+themeSelect.onchange=e=>applyTheme(e.target.value);matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(themeSelect.value==='system')applyTheme('system');});
+wrapBtn.onclick=()=>applyWrap(!wrap);document.getElementById('zoomOut').onclick=()=>applyZoom(zoom-10);document.getElementById('zoomIn').onclick=()=>applyZoom(zoom+10);zoomReset.onclick=()=>applyZoom(100);
+document.getElementById('focusBtn').onclick=()=>{document.body.classList.toggle('focus');document.getElementById('focusBtn').classList.toggle('on');};
+document.getElementById('fullBtn').onclick=async()=>{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.();else await document.exitFullscreen?.();};
 
-restoreDraft(); loadPrefs(); mark(); showDoc(); updateCursor(); initWasm();
+autoLayout.addEventListener('change',()=>{if(autoLayout.checked)applyLayout('auto');else applyLayout(detectedLayout);});
+layoutButtons.forEach(btn=>btn.addEventListener('click',()=>setManualLayout(btn.dataset.layoutMode)));
+window.addEventListener('resize',()=>{clearTimeout(window.__g134Resize);window.__g134Resize=setTimeout(reevaluateLayout,120);});
+window.addEventListener('orientationchange',()=>setTimeout(reevaluateLayout,180));
+
+ document.querySelectorAll('[data-save]').forEach(btn=>btn.onclick=async()=>{
+  const kind=btn.dataset.save;menu.classList.remove('open');
+  if(kind==='txt')download(baseName()+'.txt','text/plain;charset=utf-8',page.innerText||'');
+  if(kind==='html')download(baseName()+'.html','text/html;charset=utf-8',page.innerHTML);
+  if(kind==='doc')download(baseName()+'.doc','application/msword',wordHtml());
+  if(kind==='md')download(baseName()+'.md','text/markdown;charset=utf-8',markdown());
+  if(kind==='pdf'){showDoc();setTimeout(()=>window.print(),50);}
+  if(kind==='share'){const file=new File([page.innerText||''],baseName()+'.txt',{type:'text/plain'});if(navigator.share)await navigator.share({title:fileName,files:[file]}).catch(()=>navigator.share({title:fileName,text:page.innerText||''}));else autosaveEl.textContent='На этом устройстве нет функции «Поделиться»';}
+});
+document.getElementById('new').onclick=()=>{menu.classList.remove('open');if(dirty&&!confirm('Сбросить изменения?'))return;page.innerHTML='';fileName='без имени';dirty=false;mark();showDoc();saveDraft(true);};
+document.getElementById('find').onclick=()=>{const q=document.getElementById('q').value;if(q)window.find(q);};
+window.addEventListener('keydown',e=>{if(!e.ctrlKey)return;const k=e.key.toLowerCase();if(k==='s'){e.preventDefault();menu.classList.add('open');}if(k==='o'){e.preventDefault();document.getElementById('file').click();}if(k==='n'){e.preventDefault();document.getElementById('new').click();}if(k==='f'){e.preventDefault();document.getElementById('q').focus();}if(k==='0'){e.preventDefault();applyZoom(100);}if(k==='+'||k==='='){e.preventDefault();applyZoom(zoom+10);}if(k==='-'){e.preventDefault();applyZoom(zoom-10);}});
+window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>{e.preventDefault();openAny(e.dataTransfer.files[0]);});window.addEventListener('beforeunload',e=>{if(dirty){saveDraft(true);e.preventDefault();}});
+
+restoreDraft();loadPrefs();mark();showDoc();updateCursor();initWasm();
 </script>
 </body>
 </html>
