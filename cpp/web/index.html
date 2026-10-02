@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#f7f8fa" id="themeMeta">
   <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="description" content="G134Office Lite — редактор без входа. DOCX, ODT, RTF, TXT и PDF сохраняются на устройстве.">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="app-icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="app.css?v=20261002-1">
@@ -22,7 +21,7 @@
         <button id="new" type="button">Новый</button>
         <button id="open" type="button">Открыть</button>
         <button id="saveBtn" class="primary" type="button">Сохранить</button>
-        <button id="copyBtn" type="button" title="Скопировать текст">Копировать</button>
+        <button id="copyBtn" type="button">Копировать</button>
       </div>
       <div class="spacer"></div>
       <span id="engine" class="engine-pill">JS</span>
@@ -38,7 +37,7 @@
       </div>
       <span id="deviceState" class="device-state">Можно писать без входа</span>
       <div class="spacer"></div>
-      <button id="cpythonBtn" type="button" title="CPython через Pyodide, загрузка по нажатию">CPython</button>
+      <button id="cpythonBtn" type="button">CPython</button>
       <button id="focusBtn" type="button">Фокус</button>
       <button id="fullBtn" type="button">Полный экран</button>
     </div>
@@ -72,7 +71,7 @@
     <iframe id="pdf" title="PDF"></iframe>
   </main>
   <footer class="status-bar"><span id="status">Документ</span><span id="cursor">Стр 1</span><span id="autosave">Автосохранение включено</span><span id="layoutFooter">Вид: авто</span></footer>
-  <div id="saveDialog" class="modal" aria-hidden="true"><section class="modal-panel"><div class="modal-head"><div><h2 id="saveTitle">Сохранить документ</h2><p>Вход не нужен. Файл остаётся на устройстве.</p></div><button id="closeSave" type="button">✕</button></div><label class="field"><span>Имя файла</span><input id="saveName" value="document"></label><div class="format-grid"><button class="format-card" data-save="docx" type="button"><strong>DOCX</strong><span>Word</span></button><button class="format-card" data-save="odt" type="button"><strong>ODT</strong><span>OpenDocument</span></button><button class="format-card" data-save="rtf" type="button"><strong>RTF</strong><span>Rich Text</span></button><button class="format-card" data-save="txt" type="button"><strong>TXT</strong><span>UTF-8</span></button><button class="format-card" data-save="pdf" type="button"><strong>PDF</strong><span>Печать браузера</span></button><button class="format-card" data-save="share" type="button"><strong>Поделиться</strong><span>Меню устройства</span></button></div><p class="privacy-note">Текст не отправляется на сервер. GitHub — только если сами нажмёте Войти.</p></section></div>
+  <div id="saveDialog" class="modal" aria-hidden="true"><section class="modal-panel"><div class="modal-head"><div><h2 id="saveTitle">Сохранить документ</h2><p>Вход не нужен. Файл остаётся на устройстве.</p></div><button id="closeSave" type="button">✕</button></div><label class="field"><span>Имя файла</span><input id="saveName" value="document"></label><div class="format-grid"><button class="format-card" data-save="docx" type="button"><strong>DOCX</strong><span>Word</span></button><button class="format-card" data-save="odt" type="button"><strong>ODT</strong><span>OpenDocument</span></button><button class="format-card" data-save="rtf" type="button"><strong>RTF</strong><span>Rich Text</span></button><button class="format-card" data-save="txt" type="button"><strong>TXT</strong><span>UTF-8</span></button><button class="format-card" data-save="pdf" type="button"><strong>PDF</strong><span>Печать браузера</span></button><button class="format-card" data-save="share" type="button"><strong>Поделиться</strong><span>Меню устройства</span></button></div></section></div>
   <div id="toast" class="toast" role="status"></div>
   <input id="file" type="file" accept=".txt,.html,.htm,.rtf,.docx,.odt,.pdf,text/plain,text/html,application/pdf" hidden>
   <script src="g134lite.js?v=20261002-3"></script>
@@ -82,6 +81,7 @@
   <script src="scroll-behavior.js?v=20261002-1"></script>
   <script src="extras.js?v=20261002-1"></script>
   <script src="engines.js?v=20261002-1"></script>
+  <script src="qt-look.js?v=20261002-1"></script>
   <!-- G134_GITHUB_ACCOUNT -->
 </body>
 </html>
