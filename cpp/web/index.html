@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>G134Office Lite</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #1b1b1b; color: #eee; font-family: Segoe UI, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; gap: 8px; align-items: center; padding: 8px; background: #111; }
+  button, input { background: #2a2a2a; color: #eee; border: 1px solid #444; padding: 6px 10px; }
+  #editor { flex: 1; border: 0; resize: none; padding: 12px; background: #111; color: #eee; font-family: Consolas, monospace; font-size: 16px; white-space: pre-wrap; }
+  #editor.nowrap { white-space: pre; overflow: auto; }
+  footer { padding: 6px 10px; background: #111; color: #aaa; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <button id="new">Создать</button>
+  <button id="open">Открыть</button>
+  <button id="save">Сохранить</button>
+  <input id="q" placeholder="Найти">
+  <button id="find">Найти</button>
+  <button id="wrap">Перенос</button>
+  <button id="plus">A+</button>
+  <button id="minus">A-</button>
+  <span id="name">без имени</span>
+</header>
+<textarea id="editor" spellcheck="false"></textarea>
+<footer id="status">Строка 1, столбец 1</footer>
+<input id="file" type="file" accept=".txt,text/plain" hidden>
+<script>
+const editor = document.getElementById('editor');
+const status = document.getElementById('status');
+const nameEl = document.getElementById('name');
+let fileName = 'без имени';
+let dirty = false;
+let size = 16;
+let findFrom = 0;
+function mark() {
+  document.title = 'G134Office Lite — ' + fileName + (dirty ? ' *' : '');
+  nameEl.textContent = fileName + (dirty ? ' *' : '');
+}
+function place() {
+  const pos = editor.selectionStart;
+  const upto = editor.value.slice(0, pos);
+  const line = upto.split('\n').length;
+  const col = upto.length - upto.lastIndexOf('\n');
+  status.textContent = 'Строка ' + line + ', столбец ' + col + '    UTF-8    ' + size + ' px';
+}
+editor.addEventListener('input', () => { dirty = true; mark(); place(); });
+editor.addEventListener('keyup', place);
+editor.addEventListener('click', place);
+document.getElementById('new').onclick = () => {
+  if (dirty && !confirm('Сбросить изменения?')) return;
+  editor.value = ''; fileName = 'без имени'; dirty = false; mark(); place();
+};
+document.getElementById('open').onclick = () => document.getElementById('file').click();
+document.getElementById('file').onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  editor.value = await file.text();
+  fileName = file.name; dirty = false; mark(); place();
+};
+document.getElementById('save').onclick = () => {
+  const blob = new Blob([editor.value], {type: 'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName.endsWith('.txt') ? fileName : 'document.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  dirty = false; mark();
+};
+document.getElementById('find').onclick = () => {
+  const q = document.getElementById('q').value;
+  if (!q) return;
+  let at = editor.value.indexOf(q, findFrom);
+  if (at < 0) at = editor.value.indexOf(q);
+  if (at < 0) { status.textContent = 'Не найдено'; return; }
+  editor.focus();
+  editor.setSelectionRange(at, at + q.length);
+  findFrom = at + q.length;
+  place();
+};
+document.getElementById('wrap').onclick = () => editor.classList.toggle('nowrap');
+document.getElementById('plus').onclick = () => { size = Math.min(48, size + 2); editor.style.fontSize = size + 'px'; place(); };
+document.getElementById('minus').onclick = () => { size = Math.max(10, size - 2); editor.style.fontSize = size + 'px'; place(); };
+window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
+mark(); place();
+</script>
+</body>
+</html>
