@@ -6,6 +6,7 @@ on:
     paths:
       - cpp/CMakeLists.txt
       - cpp/web/**
+      - oauth-backend/**
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -24,6 +25,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      G134_AUTH_BASE_URL: ${{ vars.G134_AUTH_BASE_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -41,13 +44,51 @@ jobs:
           emcmake cmake -S cpp -B build/wasm -DCMAKE_BUILD_TYPE=Release
           cmake --build build/wasm --config Release --target G134OfficeLiteCore
 
+      - name: Prepare GitHub account integration
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          base = os.environ.get('G134_AUTH_BASE_URL', '').rstrip('/')
+          sha = os.environ.get('GITHUB_SHA', '')[:12]
+          Path('cpp/web/oauth-config.js').write_text(
+              'window.G134OfficeAuth = ' + json.dumps({'baseUrl': base}, ensure_ascii=False) + ';\n',
+              encoding='utf-8'
+          )
+
+          index = Path('cpp/web/index.html')
+          text = index.read_text(encoding='utf-8')
+          marker = '<!-- G134_GITHUB_ACCOUNT -->'
+          block = (
+              marker + '\n'
+              + f'<script src="oauth-config.js?v={sha}"></script>\n'
+              + f'<script src="github-account.js?v={sha}"></script>\n'
+          )
+          if marker in text:
+              start = text.index(marker)
+              end = text.find('</body>', start)
+              if end < 0:
+                  raise SystemExit('Missing </body> after GitHub account marker')
+              text = text[:start] + block + text[end:]
+          else:
+              if '</body>' not in text:
+                  raise SystemExit('Missing </body> in cpp/web/index.html')
+              text = text.replace('</body>', block + '</body>', 1)
+          index.write_text(text, encoding='utf-8')
+          PY
+
       - name: Verify web bundle
         shell: bash
         run: |
           test -s cpp/web/index.html
           test -s cpp/web/g134lite.js
           test -s cpp/web/g134lite.wasm
-          ls -lh cpp/web/g134lite.js cpp/web/g134lite.wasm
+          test -s cpp/web/oauth-config.js
+          test -s cpp/web/github-account.js
+          grep -q 'G134_GITHUB_ACCOUNT' cpp/web/index.html
+          ls -lh cpp/web/g134lite.js cpp/web/g134lite.wasm cpp/web/oauth-config.js cpp/web/github-account.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
