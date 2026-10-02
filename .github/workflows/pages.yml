@@ -79,6 +79,36 @@ jobs:
           index.write_text(text, encoding='utf-8')
           PY
 
+      - name: Fix PDF export script boundary
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          index = Path('cpp/web/index.html')
+          text = index.read_text(encoding='utf-8')
+          start = text.find('function printPdf(){')
+          end = text.find('async function exportFormat', start)
+          if start < 0 or end < 0:
+              raise SystemExit('Could not locate printPdf/exportFormat boundary')
+
+          safe = '''function printPdf(){
+            const w=window.open('','_blank');
+            if(!w){alert('Разрешите всплывающее окно для сохранения PDF.');return}
+            w.document.open();
+            w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${xml(baseName())}</title><style>body{font-family:Calibri,Arial,sans-serif;margin:0}main{width:170mm;margin:auto;padding:18mm 20mm;font-size:12pt;line-height:1.5}@page{size:A4;margin:0}</style></head><body><main id="printRoot"></main></body></html>`);
+            w.document.close();
+            const root=w.document.getElementById('printRoot');
+            if(root)root.innerHTML=page.innerHTML;
+            setTimeout(()=>{w.focus();w.print()},250);
+          }
+          '''
+          text = text[:start] + safe + text[end:]
+          if '<script>onload=()=>setTimeout(()=>print(),150)' in text:
+              raise SystemExit('Unsafe nested script still present in index.html')
+          index.write_text(text, encoding='utf-8')
+          PY
+
       - name: Verify web bundle
         shell: bash
         run: |
@@ -88,6 +118,8 @@ jobs:
           test -s cpp/web/oauth-config.js
           test -s cpp/web/github-account.js
           grep -q 'G134_GITHUB_ACCOUNT' cpp/web/index.html
+          ! grep -Fq '<script>onload=()=>setTimeout(()=>print(),150)' cpp/web/index.html
+          grep -Fq 'function printPdf()' cpp/web/index.html
           ls -lh cpp/web/g134lite.js cpp/web/g134lite.wasm cpp/web/oauth-config.js cpp/web/github-account.js
 
       - name: Upload Pages artifact
