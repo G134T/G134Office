@@ -20,10 +20,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up JDK 26
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         distribution: temurin
         java-version: "26"
@@ -69,6 +69,8 @@ jobs:
         if-no-files-found: error
 
     - name: Sign artifact with SignPath
+      id: signpath
+      continue-on-error: true
       if: env.SIGNPATH_API_TOKEN != '' && env.SIGNPATH_ORGANIZATION_ID != '' && env.SIGNPATH_PROJECT_SLUG != '' && env.SIGNPATH_POLICY_SLUG != ''
       uses: signpath/github-action-submit-signing-request@v3
       with:
@@ -81,8 +83,14 @@ jobs:
         wait-for-completion: true
         output-artifact-directory: signed
 
+    - name: Report SignPath failure
+      if: always() && steps.signpath.outcome == 'failure'
+      shell: powershell
+      run: |
+        Write-Warning "SignPath signing failed. The unsigned installer was built and uploaded successfully. Check the SignPath trusted build system / organization configuration."
+
     - name: Upload signed installer
-      if: env.SIGNPATH_API_TOKEN != '' && env.SIGNPATH_ORGANIZATION_ID != '' && env.SIGNPATH_PROJECT_SLUG != '' && env.SIGNPATH_POLICY_SLUG != ''
+      if: steps.signpath.outcome == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: G134Office-Setup-signed
