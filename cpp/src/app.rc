@@ -1,0 +1,59 @@
+#include <windows.h>
+#pragma code_page(65001)
+#include "resource.h"
+
+IDI_APP ICON "g134.ico"
+
+1 RT_MANIFEST "app.manifest"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 0, 2, 0, 0
+PRODUCTVERSION 0, 2, 0, 0
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEFLAGS 0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+FILESUBTYPE 0
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041904B0"
+        BEGIN
+            VALUE "FileDescription", "G134Office Lite"
+            VALUE "FileVersion", "0.2.0"
+            VALUE "ProductName", "G134Office Lite"
+            VALUE "ProductVersion", "0.2.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x419, 1200
+    END
+END
+
+IDD_FIND DIALOGEX 0, 0, 280, 92
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Найти и заменить"
+FONT 9, "Segoe UI"
+BEGIN
+    LTEXT "Найти:", -1, 8, 10, 46, 10
+    EDITTEXT IDC_NEEDLE, 58, 8, 214, 14, ES_AUTOHSCROLL
+    LTEXT "Заменить:", -1, 8, 28, 46, 10
+    EDITTEXT IDC_REPLACEMENT, 58, 26, 214, 14, ES_AUTOHSCROLL
+    AUTOCHECKBOX "Учитывать регистр", IDC_MATCHCASE, 58, 46, 120, 10
+    DEFPUSHBUTTON "Найти", IDOK, 8, 70, 50, 14
+    PUSHBUTTON "Заменить", IDC_REPLACE_ONE, 64, 70, 56, 14
+    PUSHBUTTON "Все", IDC_REPLACE_ALL, 126, 70, 40, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 224, 70, 48, 14
+END
+
+IDD_GOTO DIALOGEX 0, 0, 180, 52
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Перейти к строке"
+FONT 9, "Segoe UI"
+BEGIN
+    LTEXT "Номер:", -1, 8, 10, 36, 10
+    EDITTEXT IDC_LINE, 48, 8, 124, 14, ES_NUMBER | ES_AUTOHSCROLL
+    DEFPUSHBUTTON "Перейти", IDOK, 72, 30, 46, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 124, 30, 48, 14
+END

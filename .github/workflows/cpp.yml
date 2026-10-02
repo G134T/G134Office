@@ -1,0 +1,69 @@
+name: Lite editor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cpp/**"
+      - ".github/workflows/cpp.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (-not (Test-Path -LiteralPath $vswhere)) {
+            $cmd = Get-Command vswhere.exe -ErrorAction SilentlyContinue
+            if (-not $cmd) { throw "vswhere.exe не найден" }
+            $vswhere = $cmd.Source
+          }
+          $require = @("-latest", "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64")
+          $install = & $vswhere @require -property installationPath
+          $version = & $vswhere @require -property installationVersion
+          $line = & $vswhere @require -property catalog_productLineVersion
+          if (-not $install -or -not $version -or -not $line) { throw "Инструменты C++ Visual Studio не найдены" }
+          $major = ($version -split "\.")[0]
+          if (-not $major) { throw "Не удалось определить генератор Visual Studio" }
+          Write-Host "Visual Studio $major $line at $install"
+          cmake -S cpp -B cpp/build -G "Visual Studio $major $line" -A x64
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build
+        run: cmake --build cpp/build --config Release
+
+      - name: Test
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path cpp/build -Recurse -Filter lite_tests.exe |
+            Where-Object { $_.FullName -match "\\Release\\" } |
+            Select-Object -First 1
+          if (-not $exe) { throw "lite_tests.exe не найден" }
+          & $exe.FullName
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Collect exe
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path cpp/out | Out-Null
+          $exe = Get-ChildItem -Path cpp/build -Recurse -Filter G134OfficeLite.exe |
+            Where-Object { $_.FullName -match "\\Release\\" -and $_.FullName -notmatch "\\tests\\" } |
+            Select-Object -First 1
+          if (-not $exe) { throw "G134OfficeLite.exe не найден" }
+          Copy-Item -LiteralPath $exe.FullName -Destination cpp/out/G134OfficeLite.exe
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: G134OfficeLite
+          path: cpp/out/G134OfficeLite.exe
+          archive: false
+          if-no-files-found: error

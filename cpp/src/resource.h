@@ -1,0 +1,11 @@
+#pragma once
+
+#define IDI_APP 1
+#define IDD_FIND 100
+#define IDD_GOTO 101
+#define IDC_NEEDLE 1000
+#define IDC_REPLACEMENT 1001
+#define IDC_MATCHCASE 1002
+#define IDC_REPLACE_ONE 1003
+#define IDC_REPLACE_ALL 1004
+#define IDC_LINE 1005
