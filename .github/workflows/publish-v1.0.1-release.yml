@@ -30,7 +30,7 @@ jobs:
       - name: Set up full JDK 26
         uses: actions/setup-java@v5
         with:
-          distribution: microsoft
+          distribution: liberica
           java-version: "26"
 
       - name: Install Inno Setup
